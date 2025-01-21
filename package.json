@@ -11,8 +11,12 @@
   },
   "dependencies": {
     "aaaad_frontend": "file:",
+    "axios": "^1.7.9",
+    "chess.js": "^1.0.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-chessboard": "^4.7.2",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
