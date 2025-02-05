@@ -65,9 +65,9 @@ const Analysis = ({ list }) => {
             <button onClick={() => handleFetch('current')} style={{ marginBottom: '10px', padding: '10px' }}>
                 Current Analysis
             </button>
-            <button onClick={() => handleFetch('full')} style={{ marginBottom: '10px', padding: '10px' }}>
+            {/* <button onClick={() => handleFetch('full')} style={{ marginBottom: '10px', padding: '10px' }}>
                 Full Game Analysis
-            </button>
+            </button> */}
             <button onClick={() => handleFetch('hints')} style={{ marginBottom: '10px', padding: '10px' }}>
                 Hints
             </button>

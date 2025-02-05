@@ -45,6 +45,9 @@ const GamePage = (props) => {
     const [playerTime, setPlayerTime] = useState(parseInt(playerData?.time || "0") * 60);
     const [botTime, setBotTime] = useState(parseInt(playerData?.time || "0") * 60);
 
+    const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); 
+    const [isReviewMode, setIsReviewMode] = useState(false);
+
     useEffect(() => {
 
         if(playerData?.playWithTime && gameInProgress){
@@ -139,6 +142,18 @@ const GamePage = (props) => {
             return;  
         }
 
+        if (isReviewMode) {
+            const confirmChange = window.confirm(
+                "Making a move here will truncate the subsequent move history. Do you want to continue?"
+            );
+            if (!confirmChange) return;
+    
+            const truncatedHistory = moveHistory.slice(0, currentMoveIndex + 1);
+            setMoveHistory(truncatedHistory);
+            setCurrentMoveIndex(truncatedHistory.length - 1);
+            setIsReviewMode(false); 
+        }
+
         const isPawnPromotion =
         (game.turn() === "w" && sourceSquare[1] === "7" && targetSquare[1] === "8") ||
         (game.turn() === "b" && sourceSquare[1] === "2" && targetSquare[1] === "1");
@@ -172,6 +187,7 @@ const GamePage = (props) => {
             setMoveHistory((prev) => {
                 const newMoveHistory = [...prev, { move: move.san, fen: game.fen() }];
                 localStorage.setItem("moveHistory", JSON.stringify(newMoveHistory));
+                setCurrentMoveIndex(newMoveHistory.length - 1);
                 return newMoveHistory;
             });
 
@@ -268,6 +284,7 @@ const GamePage = (props) => {
             setMoveHistory((prev) => {
                 const newMoveHistory = [...prev, { move: botMove, fen: game.fen() }];
                 localStorage.setItem("moveHistory", JSON.stringify(newMoveHistory));
+                setCurrentMoveIndex(newMoveHistory.length - 1);
                 return newMoveHistory;
             });
 
@@ -299,7 +316,7 @@ const GamePage = (props) => {
 
             await axios.post("http://localhost:8080/stockfish/api/chess/start"); 
             setGame(new Chess()); 
-
+            setCurrentMoveIndex(-1);
             setMoveHistory([]);
             setFenList([]);
             setHighlightedSquares({});
@@ -412,6 +429,24 @@ const GamePage = (props) => {
         console.log('Current Board FEN:', game.fen());
 
     }, [game]);
+
+    const handleBack = () => {
+        if (currentMoveIndex > 0) {
+            const newIndex = currentMoveIndex - 1;
+            setCurrentMoveIndex(newIndex);
+            setGame(new Chess(moveHistory[newIndex].fen)); 
+            setIsReviewMode(true);
+        }
+    };
+    
+    const handleForward = () => {
+        if (currentMoveIndex < moveHistory.length - 1) {
+            const newIndex = currentMoveIndex + 1;
+            setCurrentMoveIndex(newIndex);
+            setGame(new Chess(moveHistory[newIndex].fen)); 
+            setIsReviewMode(newIndex === moveHistory.length - 1 ? false : true);
+        }
+    };
     
 
 
@@ -426,10 +461,6 @@ const GamePage = (props) => {
             )}
 
             <div className="mb-4 flex gap-4">
-
-                <span>
-                    Hello, {playerData?.name || "Player"}! You are playing as {playerData?.player || playerColor}.
-                </span>
 
                 <button
                     onClick={startGame}
@@ -449,25 +480,44 @@ const GamePage = (props) => {
                 >
                     Reset
                 </button>
-                
 
-                <div>
-                    <label htmlFor="colorSelect" className="mr-2">Choose Your Color:</label>
-                    <select
-                        id="colorSelect"
-                        value={playerColor}
-                        onChange={handleColorChange}
-                        className="px-2 py-1 border rounded text-black"
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleBack}
+                        disabled={currentMoveIndex <= 0 || playerData?.playWithTime} // Disable if no previous move
+                        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
                     >
-                        <option value="white">White</option>
-                        <option value="black">Black</option>
-                    </select>
+                        Back
+                    </button>
+                    <button
+                        onClick={handleForward}
+                        disabled={currentMoveIndex === moveHistory.length - 1 || gameInProgress || playerData?.playWithTime} // Disable if no next move
+                        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+                    >
+                        Forward
+                    </button>
                 </div>
+
+                <button
+                    onClick={() => {
+                        setCurrentMoveIndex(moveHistory.length - 1);
+                        setGame(new Chess(moveHistory[moveHistory.length - 1].fen));
+                        setIsReviewMode(false); // Exit review mode
+                    }}
+                    disabled={!isReviewMode && !gameInProgress || playerData?.playWithTime} // Disable if not in review mode
+                    className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+                >
+                    Resume Game
+                </button>
+                
             </div>
 
             <div className="flex w-[100%] gap-10 mb-4">
 
                 <div className="flex flex-col gap-4 text-sm flex-1">
+                    <span>
+                        Hello, {playerData?.name || "Player"}! You are playing as {playerData?.player || playerColor}.
+                    </span>
                     <Analysis list={fenList} />
                 </div>
 
@@ -489,7 +539,7 @@ const GamePage = (props) => {
                             backgroundColor: "#f0ecec", 
                         }}
                         customPieces={customPieces}
-                        
+                        arePiecesDraggable={!isReviewMode}
                     />
                 </div>
 
@@ -498,33 +548,6 @@ const GamePage = (props) => {
                 ">
 
                     <MoveHistory moveHistory={moveHistory}/>
-
-                    {/* <h2 className="text-lg font-semibold mb-2">Move History</h2>
-
-                    <button
-                            onClick={copyMoveHistory}
-                            className="absolute top-4 right-2 px-4 py-2 text-white rounded"
-                        >
-                            <MdContentCopy/>
-                    </button>
-
-                    <pre className="
-                         overflow-y-auto max-h-80 w-[28rem] flex flex-wrap gap-2 no-scrollbar 
-                    ">
-                        
-                        {moveHistory.map((move, index) => (
-                            <span
-                            key={index}
-                            className={`inline-block mr-4 ${index === moveHistory.length - 1 ? "bg-gray-700 px-2 py-1 text-md rounded" : ""}`}
-                            >
-                                {index % 2 === 0 && <span className="inline-block">{`${Math.floor(index / 2) + 1}.`}</span>}
-                            
-                                <span>
-                                    {formatMove(move)}
-                                </span>
-                            </span>
-                        ))}
-                    </pre> */}
 
                     <div className="absolute bottom-4 left-2 right-2 flex flex-col justify-between">
 
@@ -567,6 +590,19 @@ const GamePage = (props) => {
                                 {i}
                             </option>
                         ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label htmlFor="colorSelect" className="mr-2">Choose Your Color:</label>
+                    <select
+                        id="colorSelect"
+                        value={playerColor}
+                        onChange={handleColorChange}
+                        className="px-2 py-1 border rounded text-black"
+                    >
+                        <option value="white">White</option>
+                        <option value="black">Black</option>
                     </select>
                 </div>
                 <div className="mb-4">
