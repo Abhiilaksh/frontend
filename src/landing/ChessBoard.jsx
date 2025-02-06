@@ -2,11 +2,96 @@ import React, { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import axios from "axios";
 
+const customPieces = {
+  wP: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/wp.png"
+      alt="White Pawn"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  wR: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/wr.png"
+      alt="White Rook"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  wN: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/wn.png"
+      alt="White Knight"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  wB: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/wb.png"
+      alt="White Bishop"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  wQ: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/wq.png"
+      alt="White Queen"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  wK: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/wk.png"
+      alt="White King"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  bP: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/bp.png"
+      alt="Black Pawn"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  bR: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/br.png"
+      alt="Black Rook"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  bN: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/bn.png"
+      alt="Black Knight"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  bB: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/bb.png"
+      alt="Black Bishop"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  bQ: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/bq.png"
+      alt="Black Queen"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+  bK: ({ squareWidth }) => (
+    <img
+      src="/assets/pieces/bk.png"
+      alt="Black King"
+      style={{ width: squareWidth, height: squareWidth }}
+    />
+  ),
+};
+
 export default function ChessBoard() {
   const [games, setGames] = useState([]);
   const [fen, setFen] = useState("start");
-//   const [currentGameIndex, setCurrentGameIndex] = useState(0);
-//   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   useEffect(() => {
     const getGame = async () => {
       try {
@@ -23,7 +108,7 @@ export default function ChessBoard() {
     getGame();
   }, []);
   useEffect(() => {
-    if (games.length === 0) return; 
+    if (games.length === 0) return;
 
     let gameIndex = 0;
     let moveIndex = 0;
@@ -41,8 +126,6 @@ export default function ChessBoard() {
         return;
       }
       setFen(game.data.moves[moveIndex].fen);
-    //   setCurrentGameIndex(gameIndex);
-    //   setCurrentMoveIndex(moveIndex);
 
       moveIndex++;
     }, 2000);
@@ -52,12 +135,16 @@ export default function ChessBoard() {
 
   return (
     <div>
-      {/* <h2>Game {currentGameIndex + 1}, Move {currentMoveIndex + 1}</h2> */}
       <Chessboard
         position={fen}
         boardWidth={650}
-        customDarkSquareStyle={{ backgroundColor: "#868f96" }}
-        customLightSquareStyle={{ backgroundColor: "#e8ecef" }}
+        customDarkSquareStyle={{
+          backgroundColor: "#888c94",
+        }}
+        customLightSquareStyle={{
+          backgroundColor: "#f0ecec",
+        }}
+        customPieces={customPieces}
       />
     </div>
   );
