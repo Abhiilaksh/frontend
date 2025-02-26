@@ -20,6 +20,9 @@ const ChessGame = () => {
   const [difficulty, setDifficulty] = useState(15);
   const [showDifficultySlider, setShowDifficultySlider] = useState(false);
   const [customDifficulty, setCustomDifficulty] = useState(15);
+  const [moveHistory, setMoveHistory] = useState([]);
+  const [showMoveHistory, setShowMoveHistory] = useState(false);
+  const [historyDisplayType, setHistoryDisplayType] = useState('moves');
 
   // Helper function to handle custom difficulty changes
   const handleCustomDifficultyChange = (event) => {
@@ -44,6 +47,27 @@ const ChessGame = () => {
     return option ? option.label : `Custom difficulty set to ${difficulty}`;
   };
 
+  const toggleMoveHistory = () => {
+    setShowMoveHistory(!showMoveHistory);
+  };
+
+  // ADD THIS NEW FUNCTION FOR CHANGING HISTORY DISPLAY TYPE
+  const changeHistoryDisplayType = (type) => {
+    setHistoryDisplayType(type);
+  };
+
+  // ADD THIS NEW FUNCTION TO RECORD MOVES IN HISTORY
+  const addMoveToHistory = (gameInstance, moveText) => {
+    const newMove = {
+      moveNumber: moveHistory.length,
+      moveText: moveText,
+      fen: gameInstance.fen(),
+      pgn: gameInstance.pgn()
+    };
+
+    setMoveHistory(prev => [...prev, newMove]);
+  };
+
   // Start a new game with the selected color
   const startGame = (color) => {
     const newGame = new Chess();
@@ -61,6 +85,13 @@ const ChessGame = () => {
     setSelectedSquare(null);
     setValidMoves({});
     setGameStarted(true);
+
+    setMoveHistory([{
+      moveNumber: 0,
+      moveText: "Starting Position",
+      fen: newGame.fen(),
+      pgn: newGame.pgn()
+    }]);
 
     // If player chose black, make Stockfish move first
     if (color === 'b') {
@@ -162,6 +193,7 @@ const ChessGame = () => {
         }
 
         setGame(new Chess(currentGame.fen()));
+        addMoveToHistory(currentGame, `Stockfish: ${stockfishMove.from}-${stockfishMove.to}`);
 
         // Update last move to include Stockfish move
         const aiMoveText = `Stockfish: ${bestMove.substring(0, 2)}${bestMove.substring(2, 4)}`;
@@ -212,6 +244,8 @@ const ChessGame = () => {
 
       const playerMoveText = `You: ${sourceSquare}${targetSquare}`;
 
+      addMoveToHistory(newGame, `You: ${sourceSquare}-${targetSquare}`);
+
       // Check for checkmate or draw before Stockfish moves
       if (newGame.isCheckmate()) {
         toast.success('Checkmate! You won!', { position: 'top-center', autoClose: 3000, hideProgressBar: true });
@@ -253,8 +287,171 @@ const ChessGame = () => {
     });
     setSelectedSquare(null);
     setValidMoves({});
+    setMoveHistory([]);
   };
 
+  const renderHistoryContent = () => {
+    if (moveHistory.length === 0) return <p>No moves played yet.</p>;
+
+    switch (historyDisplayType) {
+      case 'moves':
+        return (
+          <div className="h-[40rem] overflow-y-auto">
+            {moveHistory.map((historyItem, index) => (
+              <div
+                key={index}
+                className="py-1 border-b border-gray-200 flex items-center"
+              >
+                <span className="font-medium mr-2">{index}.</span>
+                <span>{historyItem.moveText}</span>
+              </div>
+            ))}
+          </div>
+        );
+      case 'fen':
+        return (
+          <div className="h-[40rem] overflow-y-auto">
+            {moveHistory.map((historyItem, index) => (
+              <div
+                key={index}
+                className="py-1 border-b border-gray-200"
+              >
+                <div className="font-medium">{index}. {historyItem.moveText}</div>
+                <div className="font-mono text-xs break-all bg-gray-100 p-1 mt-1">
+                  {historyItem.fen}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      case 'pgn':
+        const generateCumulativePgn = () => {
+          // Create a chess instance to track the game
+          const chess = new Chess();
+
+          // Array to store the PGN at each step
+          const pgnSteps = ["(Starting position - no moves yet)"];
+
+          // Track move number
+          let moveNumber = 1;
+          let isWhiteMove = true;
+
+          // Process each move (skip the initial position)
+          for (let i = 1; i < moveHistory.length; i++) {
+            const moveText = moveHistory[i].moveText;
+            // Extract the move coordinates (e.g., "e2-e4" from "Stockfish: e2-e4")
+            const moveParts = moveText.split(': ');
+            if (moveParts.length > 1) {
+              const coords = moveParts[1].split('-');
+              if (coords.length === 2) {
+                // Try to make the move
+                try {
+                  const move = chess.move({
+                    from: coords[0],
+                    to: coords[1],
+                    promotion: 'q' // Default promotion to queen
+                  });
+
+                  // Get the PGN and clean it
+                  const rawPgn = chess.pgn();
+                  const cleanPgn = rawPgn.replace(/\[.*?\]\s*/g, '').trim();
+
+                  pgnSteps.push(cleanPgn || `Move ${i}`);
+                } catch (error) {
+                  console.error("Error recreating move:", error);
+                  pgnSteps.push(`(Error with move ${i})`);
+                }
+              } else {
+                pgnSteps.push(`(Invalid move format at step ${i})`);
+              }
+            } else {
+              pgnSteps.push(`(Cannot parse move at step ${i})`);
+            }
+          }
+
+          return pgnSteps;
+        };
+
+        const pgnSteps = generateCumulativePgn();
+
+        return (
+          <div className="h-[40rem] overflow-y-auto">
+            <h4 className="font-bold mb-2">PGN:</h4>
+
+            {moveHistory.length > 0 && (
+              <div className="mb-3 pb-3 border-b border-gray-300">
+                <div className="font-mono text-sm bg-gray-100 p-2 mt-1">
+                  {pgnSteps[pgnSteps.length - 1] || "(PGN not available)"}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      default:
+        return <p>Invalid display type</p>;
+    }
+  };
+
+  const undoLastMove = () => {
+    // Check if there are moves to undo
+    if (moveHistory.length <= 1) {
+      return;
+    }
+  
+    try {
+      // Create a new game instance and feed it the moves up to the point we want
+      const newGame = new Chess();
+      
+      // Get all moves except the last two (player's move and Stockfish's response)
+      const movesToKeep = moveHistory.slice(0, -2);
+      
+      // Apply each move to the new game instance
+      for (let i = 1; i < movesToKeep.length; i++) { // Start from 1 to skip initial position
+        const moveText = movesToKeep[i].moveText;
+        const moveParts = moveText.split(': ');
+        if (moveParts.length > 1) {
+          const coords = moveParts[1].split('-');
+          if (coords.length === 2) {
+            try {
+              newGame.move({
+                from: coords[0],
+                to: coords[1],
+                promotion: 'q' // Default promotion to queen
+              });
+            } catch (error) {
+              console.error('Error recreating move:', error);
+            }
+          }
+        }
+      }
+  
+      // Update game state with the new position
+      setGame(newGame);
+      
+      // Update move history
+      setMoveHistory(movesToKeep);
+  
+      // Update game state
+      setGameState({
+        isPlayerTurn: true,
+        status: 'Your turn',
+        lastMove: null,
+      });
+  
+      // Reset any selected square or valid moves
+      setSelectedSquare(null);
+      setValidMoves({});
+  
+    } catch (error) {
+      console.error('Error undoing moves:', error);
+      toast.error('Unable to undo moves!', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: true
+      });
+    }
+  };
+  
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       {!gameStarted ? (
@@ -269,8 +466,8 @@ const ChessGame = () => {
                   key={option.value}
                   onClick={() => setDifficulty(option.value)}
                   className={`px-6 py-3 rounded transition-colors font-medium ${difficulty === option.value
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                     }`}
                 >
                   {option.label}
@@ -303,7 +500,7 @@ const ChessGame = () => {
                   onChange={handleCustomDifficultyChange}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
-                
+
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>Easy (1)</span>
                   <span>Hard (25)</span>
@@ -330,7 +527,7 @@ const ChessGame = () => {
             </div>
           </div>
 
-              Current Difficulty level : {difficulty}
+          Current Difficulty level : {difficulty}
           <button
             onClick={() => {
               setCustomDifficulty(difficulty);
@@ -374,8 +571,19 @@ const ChessGame = () => {
             >
               New Game
             </button>
+            <button
+              onClick={undoLastMove}
+              // Disable the button if there are no moves to undo
+              disabled={moveHistory.length <= 1}
+              className={`px-4 py-2 text-white rounded transition-colors ${moveHistory.length <= 1
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-yellow-500 hover:bg-yellow-600'
+                }`}
+            >
+              Undo Move
+            </button>
           </div>
-          <div className='flex w-[100vw] justify-evenly'>
+          <div className='flex w-[100vw] flex-wrap justify-evenly'>
             <div className='flex-1'>
               <CustomChessboard
                 fen={game.fen()}
@@ -393,7 +601,7 @@ const ChessGame = () => {
                 }}
               />
             </div>
-            <div className='flex-1'>
+            <div className='flex-1 text-center'>
               <h2 className="text-2xl font-bold">{gameState.status}</h2>
               <div className="text-lg font-semibold">
                 Playing as: {playerColor === 'w' ? 'White' : 'Black'}
@@ -401,10 +609,61 @@ const ChessGame = () => {
               <div className="text-lg font-semibold mb-3">
                 Difficulty: {getCurrentDifficultyLabel()}
               </div>
+
+            </div>
+            <div className="flex flex-1 flex-col text-gray-900 items-center w-full mb-4">
+              <button
+                onClick={toggleMoveHistory}
+                className="px-4 py-2 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors mb-2"
+              >
+                {showMoveHistory ? 'Hide Move History' : 'Show Move History'}
+              </button>
+
+              {showMoveHistory && (
+                <div className="w-full h-full bg-white rounded-lg shadow-md p-4">
+                  <div className="flex justify-between mb-3">
+                    <h3 className="font-bold text-lg">Move History</h3>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => changeHistoryDisplayType('moves')}
+                        className={`px-2 py-1 text-xs rounded ${historyDisplayType === 'moves'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 hover:bg-gray-300'}`}
+                      >
+                        Moves
+                      </button>
+                      <button
+                        onClick={() => changeHistoryDisplayType('fen')}
+                        className={`px-2 py-1 text-xs rounded ${historyDisplayType === 'fen'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 hover:bg-gray-300'}`}
+                      >
+                        FEN
+                      </button>
+                      <button
+                        onClick={() => changeHistoryDisplayType('pgn')}
+                        className={`px-2 py-1 text-xs rounded ${historyDisplayType === 'pgn'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 hover:bg-gray-300'}`}
+                      >
+                        PGN
+                      </button>
+                    </div>
+                  </div>
+
+                  {renderHistoryContent()}
+
+                  <div className="mt-3 text-xs text-gray-500">
+                    Total moves: {moveHistory.length - 1}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
+
+
       <ToastContainer />
     </div>
   );

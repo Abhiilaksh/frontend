@@ -32,7 +32,7 @@ export default function LandingHome(props) {
           alt="Chess board"
           className="w-[90%] pt-[13%] p-[8%]"
         /> */}
-        <div className="w-[90%] pt-[15%] p-[8%] opacity-75">
+        <div className="w-[90%] pt-[15%] p-[8%]">
           <ChessBoard />
         </div>
       </div>
