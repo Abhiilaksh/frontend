@@ -4,6 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomChessboard from './ChessBoard';
 import StockfishStatus from './StockfishStatus';
+import GameAnalysis from './GameAnalysis';
 
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
@@ -23,6 +24,7 @@ const ChessGame = () => {
   const [moveHistory, setMoveHistory] = useState([]);
   const [showMoveHistory, setShowMoveHistory] = useState(false);
   const [historyDisplayType, setHistoryDisplayType] = useState('moves');
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   // Helper function to handle custom difficulty changes
   const handleCustomDifficultyChange = (event) => {
@@ -49,6 +51,10 @@ const ChessGame = () => {
 
   const toggleMoveHistory = () => {
     setShowMoveHistory(!showMoveHistory);
+
+    if(!showMoveHistory){
+      setShowAnalysis(false);
+    }
   };
 
   // ADD THIS NEW FUNCTION FOR CHANGING HISTORY DISPLAY TYPE
@@ -92,6 +98,8 @@ const ChessGame = () => {
       fen: newGame.fen(),
       pgn: newGame.pgn()
     }]);
+
+    setShowAnalysis(false);
 
     // If player chose black, make Stockfish move first
     if (color === 'b') {
@@ -290,13 +298,22 @@ const ChessGame = () => {
     setMoveHistory([]);
   };
 
+  // Toggle analysis panel
+  const toggleAnalysis = () => {
+    setShowAnalysis(!showAnalysis);
+    if (!showAnalysis) {
+      // Hide move history when showing analysis to avoid cluttering the UI
+      setShowMoveHistory(false);
+    }
+  };
+
   const renderHistoryContent = () => {
     if (moveHistory.length === 0) return <p>No moves played yet.</p>;
 
     switch (historyDisplayType) {
       case 'moves':
         return (
-          <div className="h-[40rem] overflow-y-auto">
+          <div className="h-[36rem] overflow-y-auto">
             {moveHistory.map((historyItem, index) => (
               <div
                 key={index}
@@ -310,7 +327,7 @@ const ChessGame = () => {
         );
       case 'fen':
         return (
-          <div className="h-[40rem] overflow-y-auto">
+          <div className="h-[36rem] overflow-y-auto">
             {moveHistory.map((historyItem, index) => (
               <div
                 key={index}
@@ -375,7 +392,7 @@ const ChessGame = () => {
         const pgnSteps = generateCumulativePgn();
 
         return (
-          <div className="h-[40rem] overflow-y-auto">
+          <div className="h-[36rem] overflow-y-auto">
             <h4 className="font-bold mb-2">PGN:</h4>
 
             {moveHistory.length > 0 && (
@@ -558,32 +575,56 @@ const ChessGame = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4">
-          <div className="flex gap-4 mb-4">
-            <button
-              onClick={toggleValidMoves}
-              className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
-            >
-              {showValidMoves ? 'Hide Valid Moves' : 'Show Valid Moves'}
-            </button>
-            <button
-              onClick={resetGame}
-              className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600 transition-colors"
-            >
-              New Game
-            </button>
-            <button
-              onClick={undoLastMove}
-              // Disable the button if there are no moves to undo
-              disabled={moveHistory.length <= 1}
-              className={`px-4 py-2 text-white rounded transition-colors ${moveHistory.length <= 1
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-yellow-500 hover:bg-yellow-600'
-                }`}
-            >
-              Undo Move
-            </button>
+          <div className='flex gap-32'>
+            <div className='flex flex-1 gap-4'>
+                <h2 className="text-2xl font-bold w-80">{gameState.status}</h2>
+                <div className="text-lg font-semibold">
+                  Playing as: {playerColor === 'w' ? 'White' : 'Black'}
+                </div>
+                <div className="text-lg font-semibold mb-3">
+                  Difficulty: {getCurrentDifficultyLabel()}
+                </div>
+            </div>
+            <div className="flex flex-1 gap-4 mb-4">
+              <button
+                onClick={toggleValidMoves}
+                className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
+              >
+                {showValidMoves ? 'Hide Valid Moves' : 'Show Valid Moves'}
+              </button>
+              <button
+                onClick={resetGame}
+                className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600 transition-colors"
+              >
+                New Game
+              </button>
+              <button
+                onClick={undoLastMove}
+                // Disable the button if there are no moves to undo
+                disabled={moveHistory.length <= 1}
+                className={`px-4 py-2 text-white rounded transition-colors ${moveHistory.length <= 1
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-yellow-500 hover:bg-yellow-600'
+                  }`}
+              >
+                Undo Move
+              </button>
+              <button
+                onClick={toggleAnalysis}
+                className="px-4 py-2 text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
+              >
+                {showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
+              </button>
+
+              <button
+                  onClick={toggleMoveHistory}
+                  className="px-4 py-2 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors"
+                >
+                {showMoveHistory ? 'Hide Move History' : 'Show Move History'}
+              </button>
+            </div>
           </div>
-          <div className='flex w-[100vw] flex-wrap justify-evenly'>
+          <div className='flex w-[100%] flex-wrap justify-end'>
             <div className='flex-1'>
               <CustomChessboard
                 fen={game.fen()}
@@ -601,25 +642,19 @@ const ChessGame = () => {
                 }}
               />
             </div>
-            <div className='flex-1 text-center'>
-              <h2 className="text-2xl font-bold">{gameState.status}</h2>
-              <div className="text-lg font-semibold">
-                Playing as: {playerColor === 'w' ? 'White' : 'Black'}
-              </div>
-              <div className="text-lg font-semibold mb-3">
-                Difficulty: {getCurrentDifficultyLabel()}
-              </div>
-
+            {showAnalysis && ( <div className='flex-1 text-center'>
+                <div className="mt-6 w-full flex gap-4">
+                  <GameAnalysis 
+                    moveHistory={moveHistory} 
+                    game={game} 
+                    difficulty={difficulty}
+                    playerColor={playerColor}
+                  />
+                </div>
             </div>
-            <div className="flex flex-1 flex-col text-gray-900 items-center w-full mb-4">
-              <button
-                onClick={toggleMoveHistory}
-                className="px-4 py-2 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors mb-2"
-              >
-                {showMoveHistory ? 'Hide Move History' : 'Show Move History'}
-              </button>
-
-              {showMoveHistory && (
+            )}
+            {showMoveHistory && (
+              <div className="flex flex-1 flex-col text-gray-900 items-center w-full mb-4">
                 <div className="w-full h-full bg-white rounded-lg shadow-md p-4">
                   <div className="flex justify-between mb-3">
                     <h3 className="font-bold text-lg">Move History</h3>
@@ -657,8 +692,8 @@ const ChessGame = () => {
                     Total moves: {moveHistory.length - 1}
                   </div>
                 </div>
-              )}
             </div>
+            )}
           </div>
         </div>
       )}
