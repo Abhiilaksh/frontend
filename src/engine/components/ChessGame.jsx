@@ -624,7 +624,7 @@ const ChessGame = () => {
               </button>
             </div>
           </div>
-          <div className='flex w-[100%] flex-wrap justify-end'>
+          <div className='flex w-[100vw] flex-wrap px-4'>
             <div className='flex-1'>
               <CustomChessboard
                 fen={game.fen()}

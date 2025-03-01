@@ -111,29 +111,35 @@ const CustomChessboard = ({
   }, [width]);
 
   // Function to convert chess square to pixel coordinates
-  const getSquareCoordinates = (square, boardOrientation) => {
-    const file = square.charCodeAt(0) - "a".charCodeAt(0); // File (0-7, a-h)
-    let rank = parseInt(square[1], 10); // Rank (1-8)
+  // Function to convert chess square to pixel coordinates
+const getSquareCoordinates = (square, boardOrientation) => {
+  // Parse the square notation
+  const file = square.charCodeAt(0) - "a".charCodeAt(0); // File (0-7, a-h)
+  const rank = parseInt(square[1], 10) - 1; // Convert to 0-7 range
   
-    // Adjust rank for board orientation
-    if (boardOrientation === "black") {
-      rank = 9 - rank; // Flip the rank for black's perspective
-    } else {
-      rank = rank - 1; // Adjust for white's perspective
-    }
+  const squareSize = chessboardSize / 8; // Size of each square
   
-    const squareSize = chessboardSize / 8; // Size of each square
-    return {
-      x: file * squareSize + squareSize / 2, // Center of the square
-      y: rank * squareSize + squareSize / 2, // Center of the square
-    };
-  };
+  // Apply board orientation adjustments - corrected for both orientations
+  let x, y;
+  
+  if (boardOrientation === "white") {
+    // White orientation: files from left to right, ranks from bottom to top
+    x = file * squareSize + squareSize / 2;
+    y = (7 - rank) * squareSize + squareSize / 2; // Invert rank since SVG y=0 is at top
+  } else {
+    // Black orientation: files from right to left, ranks from top to bottom
+    x = (7 - file) * squareSize + squareSize / 2; // Mirror files horizontally
+    y = rank * squareSize + squareSize / 2;
+  }
+  
+  return { x, y };
+};
 
   return (
     <div
       ref={chessboardRef}
       className="w-full h-full"
-      style={{ maxWidth: "600px", margin: "0 auto", position: "relative" }}
+      style={{ maxWidth: "650px", margin: "0 auto", position: "relative" }}
     >
       {/* Chessboard */}
       <Chessboard
@@ -187,8 +193,8 @@ const CustomChessboard = ({
         {/* Render Arrows */}
         {arrows.map((arrow, index) => {
           const [fromSquare, toSquare, color] = arrow;
-          const from = getSquareCoordinates(fromSquare);
-          const to = getSquareCoordinates(toSquare);
+          const from = getSquareCoordinates(fromSquare, boardOrientation);
+          const to = getSquareCoordinates(toSquare, boardOrientation);
 
           return (
             <line

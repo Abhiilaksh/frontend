@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Chess } from 'chess.js';
 import { toast } from 'react-toastify';
 import CustomChessboard from './ChessBoard';
 
@@ -261,26 +260,30 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
         if (analysisType === 'overview') {
             return (
                 <div className="mt-4">
-                    <h3 className="text-xlfont-bold mb-3">Game Analysis</h3>
+                    <h3 className="text-xl font-bold mb-3 text-white">Game Analysis</h3>
 
                     {analysisResults.overallEvaluation && (
-                        <div className="mb-4 p-3 bg-gray-100 rounded">
+                        <div className="mb-4 p-3 bg-gray-100 rounded text-left">
                             <div className="text-lg font-semibold">Overall Evaluation</div>
                             <div className="flex flex-col mt-2">
-                                <div>Average Score: {analysisResults.overallEvaluation.averageScore}</div>
+                                <div>Average Score: 
+                                    <span className='text-blue-600'>
+                                        { analysisResults.overallEvaluation.averageScore}
+                                    </span>
+                                </div>
                                 <div>Range: [{analysisResults.overallEvaluation.minScore}, {analysisResults.overallEvaluation.maxScore}]</div>
-                                <div className="mt-1 font-medium">{analysisResults.overallEvaluation.advantage}</div>
+                                <div className="mt-1 text-sm">{analysisResults.overallEvaluation.advantage}</div>
                             </div>
                         </div>
                     )}
 
                     <div className="mt-4">
-                        <h4 className="text-lg font-semibold mb-2">Position Timeline</h4>
-                        <div className="h-64 overflow-y-auto border border-gray-200 rounded">
+                        <h4 className="text-lg text-white mb-2">Position Timeline</h4>
+                        <div className="h-40 overflow-y-auto border border-gray-200 rounded">
                             {analysisResults.positions.map((position, index) => (
                                 <div
                                     key={index}
-                                    className={`p-2 cursor-pointer hover:bg-blue-50 border-b border-gray-200 ${selectedPosition === index ? 'bg-blue-100' : ''
+                                    className={`p-2 cursor-pointer hover:bg-blue-50 hover:text-gray-900 border-b border-gray-200 ${selectedPosition === index ? 'bg-blue-100' : 'text-white'
                                         }`}
                                     onClick={() => handlePositionSelect(index)}
                                 >
@@ -303,8 +306,8 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
 
                     {analysisResults.positions && analysisResults.positions[selectedPosition] && (
                         <div className="mt-4">
-                            <h4 className="text-lg font-semibold mb-2">Selected Position Analysis</h4>
-                            <div className="p-3 bg-gray-100 rounded">
+                            <h4 className="text-lg text-white mb-2">Selected Position Analysis</h4>
+                            <div className="p-3 bg-gray-100 rounded text-left">
                                 <div>
                                     <span className="font-medium">Position Score:</span>
                                     <span className={`ml-2 ${analysisResults.positions[selectedPosition].score > 0.5 ? 'text-green-600 font-medium' :
@@ -350,10 +353,10 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
         } else if (analysisType === 'position') {
             return (
                 <div className="mt-4">
-                    <h3 className="text-xl font-bold mb-3">Current Position Analysis</h3>
+                    <h3 className="text-xl text-white mb-3">Current Position Analysis</h3>
 
                     {analysisResults.positions && analysisResults.positions[0] && (
-                        <div className="p-3 bg-gray-100 rounded">
+                        <div className="p-3 bg-gray-100 text-left rounded">
                             <div>
                                 <span className="font-medium">Position Score:</span>
                                 <span className={`ml-2 ${analysisResults.positions[0].score > 0.5 ? 'text-green-600 font-medium' :
@@ -433,12 +436,12 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
 
         return (
             <div className="mt-4">
-                <h3 className="text-xl font-bold mb-3">Tactical Opportunities</h3>
+                <h3 className="text-xl text-white mb-3">Tactical Opportunities</h3>
                 <div className="h-64 overflow-y-auto border border-gray-200 rounded">
                     {tacticalOpportunities.map((opportunity, index) => (
                         <div
                             key={index}
-                            className={`p-3 cursor-pointer hover:bg-blue-50 border-b border-gray-200 ${displayFen === opportunity.fen ? 'bg-blue-100' : ''
+                            className={`p-3 cursor-pointer hover:bg-blue-50 hover:text-gray-900 border-b border-gray-200 ${displayFen === opportunity.fen ? 'bg-blue-100' : ' text-white '
                                 }`}
                             onClick={() => handleTacticsSelect(opportunity)}
                         >
@@ -470,7 +473,7 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
                 </div>
 
                 {displayFen && (
-                    <div className="mt-4 p-3 bg-gray-100 rounded">
+                    <div className="mt-4 p-3 text-left bg-gray-100 rounded">
                         <div className="font-medium mb-2">Position Details:</div>
                         {tacticalOpportunities.find(o => o.fen === displayFen) && (
                             <div>
@@ -490,7 +493,7 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
                                 </div>
                             </div>
                         )}
-                        <div className="mt-2 text-sm text-gray-600">
+                        <div className="mt-2 text-sm text-center text-gray-600">
                             Green arrow shows the best move. Red arrow shows the played move.
                         </div>
                     </div>
@@ -545,9 +548,6 @@ const GameAnalysis = ({ moveHistory, game, difficulty, playerColor }) => {
                                     customSquareStyles={{}}
                                     width={96}
                                 />
-                                <div className="mt-2 text-xs text-gray-500">
-                                    Arrows: {JSON.stringify(getArrows())}
-                                </div>
                             </div>
                         )}
                     </div>
