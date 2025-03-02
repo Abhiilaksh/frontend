@@ -10,7 +10,6 @@ const PlayWithEngine = () => {
     return ( 
         <div>
             <Toaster />
-            <h2>Play with Engine</h2>
             <ChessGame playerData={playerData}/>
         </div>
     );

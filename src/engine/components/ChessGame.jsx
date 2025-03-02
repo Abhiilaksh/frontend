@@ -7,6 +7,8 @@ import StockfishStatus from './StockfishStatus';
 import GameAnalysis from './GameAnalysis';
 import HintPanel from './HintPanel';
 import ActiveHint from './ActiveHInt';
+import GameTimer from './GameTimer';
+import TimeControlSelector from './TimeControlSelector';
 
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
@@ -31,6 +33,10 @@ const ChessGame = () => {
   const [hintSquares, setHintSquares] = useState({});
   const [showHints, setShowHints] = useState(false);
   const [selectedHintLimit, setSelectedHintLimit] = useState(3);
+  const [showTimeControlSelector, setShowTimeControlSelector] = useState(false);
+  const [timeControlEnabled, setTimeControlEnabled] = useState(false);
+  const [timeControl, setTimeControl] = useState(null);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
   const hintPanelRef = useRef(null);
 
@@ -60,7 +66,7 @@ const ChessGame = () => {
   const toggleMoveHistory = () => {
     setShowMoveHistory(!showMoveHistory);
 
-    if(!showMoveHistory){
+    if (!showMoveHistory) {
       setShowAnalysis(false);
       setShowHints(false);
     }
@@ -70,7 +76,7 @@ const ChessGame = () => {
 
     setShowHints(!showHints);
 
-    if(!showHints){
+    if (!showHints) {
       setShowAnalysis(false);
       setShowMoveHistory(false);
     }
@@ -93,8 +99,46 @@ const ChessGame = () => {
     setMoveHistory(prev => [...prev, newMove]);
   };
 
+  // Add this new function to handle time control selection
+  const handleTimeControlSelection = (selectedTimeControl) => {
+    setTimeControl(selectedTimeControl);
+    setTimeControlEnabled(true);
+    setShowTimeControlSelector(false);
+  };
+
+  // Add this function to handle time up event
+  const handleTimeUp = (color) => {
+    const winner = color === 'white' ? 'Black' : 'White';
+    toast.info(`Time's up! ${winner} wins by timeout!`, {
+      position: 'top-center',
+      autoClose: 5000,
+      hideProgressBar: true
+    });
+
+    setGameState(prev => ({
+      ...prev,
+      isPlayerTurn: false,
+      status: `${winner} wins on time!`
+    }));
+
+    // Disable the timer
+    setIsTimerActive(false);
+  };
+
+  // Add this before the game setup UI in your return
+  const askForTimeControl = () => {
+    setShowTimeControlSelector(true);
+  };
+
   // Start a new game with the selected color
   const startGame = (color) => {
+
+    if (timeControlEnabled && !timeControl) {
+      setPlayerColor(color); // Remember the selected color
+      setShowTimeControlSelector(true);
+      return;
+    }
+
     const newGame = new Chess();
     setGame(newGame);
     setPlayerColor(color);
@@ -122,6 +166,11 @@ const ChessGame = () => {
 
     if (hintPanelRef.current) {
       hintPanelRef.current.setHintsLimit(selectedHintLimit);
+    }
+
+    // Start timer if time control is enabled
+    if (timeControlEnabled) {
+      setIsTimerActive(true);
     }
 
     // If player chose black, make Stockfish move first
@@ -152,30 +201,30 @@ const ChessGame = () => {
 
   const handleHintReceived = (hintData) => {
     setActiveHint(hintData);
-    
+
     // Clear previous hint highlights
     setHintSquares({});
-    
+
     // Highlight based on hint type
     if (hintData.hintType === 'bestMove' || hintData.hintType === 'tactical') {
       // For best move or tactical hints, highlight from and to squares
       const newHintSquares = {
         [hintData.from]: { backgroundColor: 'rgba(255, 215, 0, 0.5)' }, // Gold color for from square
       };
-      
+
       if (hintData.to) {
         newHintSquares[hintData.to] = { backgroundColor: 'rgba(124, 252, 0, 0.5)' }; // Green color for to square
       }
-      
+
       setHintSquares(newHintSquares);
-    } 
+    }
     else if (hintData.hintType === 'pieceSelection') {
       // For piece selection hints, just highlight the piece to move
       setHintSquares({
         [hintData.fromSquare]: { backgroundColor: 'rgba(255, 215, 0, 0.5)' }
       });
     }
-    
+
     // Strategic hints don't highlight squares
   };
 
@@ -246,6 +295,11 @@ const ChessGame = () => {
 
         const stockfishPlayedMove = currentGame.move(stockfishMove);
 
+        if (timeControlEnabled) {
+          // The AI just moved, timer switches back to player
+          setIsTimerActive(true);
+        }
+
         if (!stockfishPlayedMove) {
           console.error('Invalid Stockfish move:', bestMove);
           setGameState(prev => ({ ...prev, isPlayerTurn: true, status: 'Error: Invalid Stockfish move' }));
@@ -274,7 +328,7 @@ const ChessGame = () => {
         }
 
         setGameState({ isPlayerTurn: true, status, lastMove: lastMoveText });
-      }, 500);
+      }, 2000);
     } catch (error) {
       console.error('Unexpected error:', error);
       toast.error('Error getting Stockfish move!', { position: 'top-center', autoClose: 3000, hideProgressBar: true });
@@ -299,6 +353,11 @@ const ChessGame = () => {
       const move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
       if (!move) return false;
 
+      if (move && timeControlEnabled) {
+        // The player just moved, so their timer should pause and bot's should start
+        setIsTimerActive(true);
+      }
+
       const newGame = new Chess(game.fen());
       setGame(newGame);
 
@@ -310,10 +369,12 @@ const ChessGame = () => {
       if (newGame.isCheckmate()) {
         toast.success('Checkmate! You won!', { position: 'top-center', autoClose: 3000, hideProgressBar: true });
         setGameState({ ...gameState, status: 'Checkmate! You won.', lastMove: playerMoveText });
+        setIsTimerActive(false);
         return true;
       } else if (newGame.isDraw()) {
         toast.info('Game drawn!', { position: 'top-center', autoClose: 3000, hideProgressBar: true });
         setGameState({ ...gameState, status: 'Game drawn!', lastMove: playerMoveText });
+        setIsTimerActive(false);
         return true;
       }
 
@@ -353,6 +414,7 @@ const ChessGame = () => {
     setSelectedSquare(null);
     setValidMoves({});
     setMoveHistory([]);
+    setIsTimerActive(false);
   };
 
   // Toggle analysis panel
@@ -472,14 +534,14 @@ const ChessGame = () => {
     if (moveHistory.length <= 1) {
       return;
     }
-  
+
     try {
       // Create a new game instance and feed it the moves up to the point we want
       const newGame = new Chess();
-      
+
       // Get all moves except the last two (player's move and Stockfish's response)
       const movesToKeep = moveHistory.slice(0, -2);
-      
+
       // Apply each move to the new game instance
       for (let i = 1; i < movesToKeep.length; i++) { // Start from 1 to skip initial position
         const moveText = movesToKeep[i].moveText;
@@ -499,24 +561,24 @@ const ChessGame = () => {
           }
         }
       }
-  
+
       // Update game state with the new position
       setGame(newGame);
-      
+
       // Update move history
       setMoveHistory(movesToKeep);
-  
+
       // Update game state
       setGameState({
         isPlayerTurn: true,
         status: 'Your turn',
         lastMove: null,
       });
-  
+
       // Reset any selected square or valid moves
       setSelectedSquare(null);
       setValidMoves({});
-  
+
     } catch (error) {
       console.error('Error undoing moves:', error);
       toast.error('Unable to undo moves!', {
@@ -526,28 +588,76 @@ const ChessGame = () => {
       });
     }
   };
-  
+
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       {!gameStarted ? (
 
-        <div className="flex flex-col items-center gap-4 mb-4">
+        <div className="flex flex-col items-center gap-2 mb-4">
 
-          <div className="w-lg">
-            <h3 className="text-xl font-semibold mb-3 text-center">Select Difficulty</h3>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {difficultyOptions.map(option => (
+          <div className='flex gap-10 my-10 w-[80rem]'>
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold mb-3 text-center">Game Mode</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <button
-                  key={option.value}
-                  onClick={() => setDifficulty(option.value)}
-                  className={`px-6 py-3 rounded transition-colors font-medium ${difficulty === option.value
+                  onClick={() => setTimeControlEnabled(false)}
+                  className={`px-6 py-3 rounded transition-colors font-medium ${!timeControlEnabled
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                     }`}
                 >
-                  {option.label}
+                  Standard (No Timer)
                 </button>
-              ))}
+                <button
+                  onClick={() => {
+                    setTimeControlEnabled(true);
+                    setShowTimeControlSelector(true);
+                  }}
+                  className={`px-6 py-3 rounded transition-colors font-medium ${timeControlEnabled
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    }`}
+                >
+                  Timed Game
+                </button>
+              </div>
+
+              {timeControlEnabled && timeControl && (
+                <div className="text-center text-gray-900 bg-blue-50 p-2 rounded mb-4">
+                  <span className="font-semibold">Selected Time Control: </span>
+                  <span>{timeControl.name} - {timeControl.description}</span>
+                </div>
+              )}
+            </div>
+
+            <div className='flex-1'>
+              <h3 className="text-xl font-semibold mb-3 text-center">Select Difficulty</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {difficultyOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setDifficulty(option.value)}
+                    className={`px-6 py-3 rounded transition-colors font-medium ${difficulty === option.value
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className='flex gap-10 justify-between'>
+                <div>Current Difficulty level : {difficulty}</div>
+                <button
+                  onClick={() => {
+                    setCustomDifficulty(difficulty);
+                    setShowDifficultySlider(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                >
+                  Advanced: Set Custom Difficulty →
+                </button>
+              </div>
             </div>
           </div>
 
@@ -602,17 +712,6 @@ const ChessGame = () => {
             </div>
           </div>
 
-          Current Difficulty level : {difficulty}
-          <button
-            onClick={() => {
-              setCustomDifficulty(difficulty);
-              setShowDifficultySlider(true);
-            }}
-            className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
-          >
-            Advanced: Set Custom Difficulty →
-          </button>
-
           <div className="w-lg">
             <h3 className="text-xl font-semibold mb-3 text-center">Select Hint Limit</h3>
             <div className="grid grid-cols-5 gap-2 mb-4">
@@ -620,19 +719,18 @@ const ChessGame = () => {
                 <button
                   key={limit}
                   onClick={() => setSelectedHintLimit(limit === "∞" ? Number.POSITIVE_INFINITY : limit)}
-                  className={`px-4 py-2 rounded transition-colors font-medium ${
-                    selectedHintLimit === (limit === "∞" ? Number.POSITIVE_INFINITY : limit)
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                  }`}
+                  className={`px-4 py-2 rounded transition-colors font-medium ${selectedHintLimit === (limit === "∞" ? Number.POSITIVE_INFINITY : limit)
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    }`}
                 >
                   {limit}
                 </button>
               ))}
             </div>
             <p className="text-center text-gray-600 text-sm">
-              {selectedHintLimit === -1 
-                ? "You'll have unlimited hints during the game" 
+              {selectedHintLimit === -1
+                ? "You'll have unlimited hints during the game"
                 : `You'll have ${selectedHintLimit} hint${selectedHintLimit !== 1 ? 's' : ''} during the game`
               }
             </p>
@@ -658,26 +756,42 @@ const ChessGame = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4">
-          <div className='flex gap-32'>
-            <div className='flex flex-1 gap-4'>
-                <h2 className="text-2xl font-bold w-80">{gameState.status}</h2>
-                <div className="text-lg font-semibold">
+          <div className='flex w-full px-2 items-center justify-evenly gap-8'>
+            <div className='flex gap-4'>
+              <div className='flex flex-col flex-1'>
+                <h2 className="text-2xl font-bold">{gameState.status}</h2>
+                <div className="text-lg">
                   Playing as: {playerColor === 'w' ? 'White' : 'Black'}
                 </div>
-                <div className="text-lg font-semibold mb-3">
-                  Difficulty: {getCurrentDifficultyLabel()}
+                <div className="text-lg mb-3">
+                  Difficulty: {getCurrentDifficultyLabel()} + {difficulty}
                 </div>
+              </div>
             </div>
-            <div className="flex flex-2 gap-4 mb-4">
+            <div className='flex'>
+
+              {timeControlEnabled && (
+                <GameTimer
+                  isActive={isTimerActive}
+                  onTimeUp={handleTimeUp}
+                  initialTime={timeControl?.time || 300}
+                  increment={timeControl?.increment || 0}
+                  playerColor={playerColor}
+                  currentTurn={game.turn()}
+                />
+              )}
+
+            </div>
+            <div className="flex gap-4 flex-wrap mb-4">
               <button
                 onClick={toggleValidMoves}
-                className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 h-10 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
               >
                 {showValidMoves ? 'Hide Valid Moves' : 'Show Valid Moves'}
               </button>
               <button
                 onClick={resetGame}
-                className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600 transition-colors"
+                className="px-4 py-2 h-10 text-white bg-green-500 rounded hover:bg-green-600 transition-colors"
               >
                 New Game
               </button>
@@ -685,37 +799,37 @@ const ChessGame = () => {
                 onClick={undoLastMove}
                 // Disable the button if there are no moves to undo
                 disabled={moveHistory.length <= 1}
-                className={`px-4 py-2 text-white rounded transition-colors ${moveHistory.length <= 1
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-yellow-500 hover:bg-yellow-600'
+                className={`px-4 py-2 h-10 text-white rounded transition-colors ${moveHistory.length <= 1
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-yellow-500 hover:bg-yellow-600'
                   }`}
               >
                 Undo Move
               </button>
               <button
                 onClick={toggleAnalysis}
-                className="px-4 py-2 text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
+                className="px-4 py-2 h-10 text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
               >
                 {showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
               </button>
 
               <button
-                  onClick={toggleMoveHistory}
-                  className="px-4 py-2 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors"
-                >
+                onClick={toggleMoveHistory}
+                className="px-4 py-2 h-10 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors"
+              >
                 {showMoveHistory ? 'Hide Move History' : 'Show Move History'}
               </button>
 
               <button
                 onClick={toggleHints}
-                className='px-4 py-2 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors'
+                className='px-4 py-2 h-10 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors'
               >
-                { showHints ? 'Hide Hints' : 'Show Hints'}
+                {showHints ? 'Hide Hints' : 'Show Hints'}
               </button>
             </div>
           </div>
           <div className='flex w-[100vw] flex-wrap px-4'>
-            <div className='flex-1'>
+            <div className='flex-1 flex flex-col'>
               <CustomChessboard
                 fen={game.fen()}
                 selectedSquare={selectedSquare}
@@ -733,41 +847,41 @@ const ChessGame = () => {
                 }}
               />
             </div>
-            {showAnalysis && ( <div className='flex-1 text-center'>
-                <div className="mt-6 w-full flex gap-4">
-                  <GameAnalysis 
-                    moveHistory={moveHistory} 
-                    game={game} 
-                    difficulty={difficulty}
-                    playerColor={playerColor}
-                  />
-                </div>
+            {showAnalysis && (<div className='flex-1 text-center'>
+              <div className="mt-6 w-full flex gap-4">
+                <GameAnalysis
+                  moveHistory={moveHistory}
+                  game={game}
+                  difficulty={difficulty}
+                  playerColor={playerColor}
+                />
+              </div>
             </div>
             )}
 
             {
-              showHints && 
+              showHints &&
               <div className='flex flex-1 flex-col'>
 
                 {gameStarted && (
-                    <div className="mt-4 w-full max-w-md">
-                      <HintPanel 
-                        ref={hintPanelRef}
-                        game={game}
-                        difficulty={difficulty}
-                        isPlayerTurn={gameState.isPlayerTurn}
-                        onHintReceived={handleHintReceived}
-                        hints={selectedHintLimit}
-                      />
-                    </div>
-                  )}
+                  <div className="mt-4 w-full max-w-md">
+                    <HintPanel
+                      ref={hintPanelRef}
+                      game={game}
+                      difficulty={difficulty}
+                      isPlayerTurn={gameState.isPlayerTurn}
+                      onHintReceived={handleHintReceived}
+                      hints={selectedHintLimit}
+                    />
+                  </div>
+                )}
 
-                  {activeHint && (
-                    <div className="w-full max-w-md mt-4 text-gray-900">
-                      <ActiveHint hintData={activeHint} />
-                    </div>
-                  )}
-                
+                {activeHint && (
+                  <div className="w-full max-w-md mt-4 text-gray-900">
+                    <ActiveHint hintData={activeHint} />
+                  </div>
+                )}
+
               </div>
             }
             {showMoveHistory && (
@@ -809,7 +923,7 @@ const ChessGame = () => {
                     Total moves: {moveHistory.length - 1}
                   </div>
                 </div>
-            </div>
+              </div>
             )}
           </div>
         </div>
@@ -817,6 +931,11 @@ const ChessGame = () => {
 
 
       <ToastContainer />
+      <TimeControlSelector
+        onSelectTimeControl={handleTimeControlSelection}
+        onCancel={() => setShowTimeControlSelector(false)}
+        showTimeControl={showTimeControlSelector}
+      />
     </div>
   );
 };
