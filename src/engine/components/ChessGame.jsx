@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomChessboard from './ChessBoard';
 import StockfishStatus from './StockfishStatus';
 import GameAnalysis from './GameAnalysis';
+import HintPanel from './HintPanel';
+import ActiveHint from './ActiveHInt';
 
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
@@ -25,6 +27,12 @@ const ChessGame = () => {
   const [showMoveHistory, setShowMoveHistory] = useState(false);
   const [historyDisplayType, setHistoryDisplayType] = useState('moves');
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [activeHint, setActiveHint] = useState(null);
+  const [hintSquares, setHintSquares] = useState({});
+  const [showHints, setShowHints] = useState(false);
+  const [selectedHintLimit, setSelectedHintLimit] = useState(3);
+
+  const hintPanelRef = useRef(null);
 
   // Helper function to handle custom difficulty changes
   const handleCustomDifficultyChange = (event) => {
@@ -54,8 +62,19 @@ const ChessGame = () => {
 
     if(!showMoveHistory){
       setShowAnalysis(false);
+      setShowHints(false);
     }
   };
+
+  const toggleHints = () => {
+
+    setShowHints(!showHints);
+
+    if(!showHints){
+      setShowAnalysis(false);
+      setShowMoveHistory(false);
+    }
+  }
 
   // ADD THIS NEW FUNCTION FOR CHANGING HISTORY DISPLAY TYPE
   const changeHistoryDisplayType = (type) => {
@@ -101,6 +120,10 @@ const ChessGame = () => {
 
     setShowAnalysis(false);
 
+    if (hintPanelRef.current) {
+      hintPanelRef.current.setHintsLimit(selectedHintLimit);
+    }
+
     // If player chose black, make Stockfish move first
     if (color === 'b') {
       makeAIMove(newGame);
@@ -125,6 +148,35 @@ const ChessGame = () => {
 
     setValidMoves(validMovesObj);
     return validMovesObj;
+  };
+
+  const handleHintReceived = (hintData) => {
+    setActiveHint(hintData);
+    
+    // Clear previous hint highlights
+    setHintSquares({});
+    
+    // Highlight based on hint type
+    if (hintData.hintType === 'bestMove' || hintData.hintType === 'tactical') {
+      // For best move or tactical hints, highlight from and to squares
+      const newHintSquares = {
+        [hintData.from]: { backgroundColor: 'rgba(255, 215, 0, 0.5)' }, // Gold color for from square
+      };
+      
+      if (hintData.to) {
+        newHintSquares[hintData.to] = { backgroundColor: 'rgba(124, 252, 0, 0.5)' }; // Green color for to square
+      }
+      
+      setHintSquares(newHintSquares);
+    } 
+    else if (hintData.hintType === 'pieceSelection') {
+      // For piece selection hints, just highlight the piece to move
+      setHintSquares({
+        [hintData.fromSquare]: { backgroundColor: 'rgba(255, 215, 0, 0.5)' }
+      });
+    }
+    
+    // Strategic hints don't highlight squares
   };
 
   // Handle square click for either selecting a piece or making a move
@@ -293,6 +345,11 @@ const ChessGame = () => {
       status: 'Choose your color to start',
       lastMove: null,
     });
+    setActiveHint(null);
+    setHintSquares({});
+    if (hintPanelRef.current) {
+      hintPanelRef.current.resetHints();
+    }
     setSelectedSquare(null);
     setValidMoves({});
     setMoveHistory([]);
@@ -304,6 +361,7 @@ const ChessGame = () => {
     if (!showAnalysis) {
       // Hide move history when showing analysis to avoid cluttering the UI
       setShowMoveHistory(false);
+      setShowHints(false);
     }
   };
 
@@ -554,6 +612,31 @@ const ChessGame = () => {
           >
             Advanced: Set Custom Difficulty →
           </button>
+
+          <div className="w-lg">
+            <h3 className="text-xl font-semibold mb-3 text-center">Select Hint Limit</h3>
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {[1, 3, 5, 7, "∞"].map(limit => (
+                <button
+                  key={limit}
+                  onClick={() => setSelectedHintLimit(limit === "∞" ? Number.POSITIVE_INFINITY : limit)}
+                  className={`px-4 py-2 rounded transition-colors font-medium ${
+                    selectedHintLimit === (limit === "∞" ? Number.POSITIVE_INFINITY : limit)
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
+                >
+                  {limit}
+                </button>
+              ))}
+            </div>
+            <p className="text-center text-gray-600 text-sm">
+              {selectedHintLimit === -1 
+                ? "You'll have unlimited hints during the game" 
+                : `You'll have ${selectedHintLimit} hint${selectedHintLimit !== 1 ? 's' : ''} during the game`
+              }
+            </p>
+          </div>
           <h2 className="text-2xl font-bold">Choose your color</h2>
           <div className="flex gap-4">
             <button
@@ -585,7 +668,7 @@ const ChessGame = () => {
                   Difficulty: {getCurrentDifficultyLabel()}
                 </div>
             </div>
-            <div className="flex flex-1 gap-4 mb-4">
+            <div className="flex flex-2 gap-4 mb-4">
               <button
                 onClick={toggleValidMoves}
                 className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
@@ -622,6 +705,13 @@ const ChessGame = () => {
                 >
                 {showMoveHistory ? 'Hide Move History' : 'Show Move History'}
               </button>
+
+              <button
+                onClick={toggleHints}
+                className='px-4 py-2 text-white bg-purple-500 rounded hover:bg-purple-600 transition-colors'
+              >
+                { showHints ? 'Hide Hints' : 'Show Hints'}
+              </button>
             </div>
           </div>
           <div className='flex w-[100vw] flex-wrap px-4'>
@@ -639,6 +729,7 @@ const ChessGame = () => {
                     },
                   }),
                   ...validMoves,
+                  ...hintSquares
                 }}
               />
             </div>
@@ -653,6 +744,32 @@ const ChessGame = () => {
                 </div>
             </div>
             )}
+
+            {
+              showHints && 
+              <div className='flex flex-1 flex-col'>
+
+                {gameStarted && (
+                    <div className="mt-4 w-full max-w-md">
+                      <HintPanel 
+                        ref={hintPanelRef}
+                        game={game}
+                        difficulty={difficulty}
+                        isPlayerTurn={gameState.isPlayerTurn}
+                        onHintReceived={handleHintReceived}
+                        hints={selectedHintLimit}
+                      />
+                    </div>
+                  )}
+
+                  {activeHint && (
+                    <div className="w-full max-w-md mt-4 text-gray-900">
+                      <ActiveHint hintData={activeHint} />
+                    </div>
+                  )}
+                
+              </div>
+            }
             {showMoveHistory && (
               <div className="flex flex-1 flex-col text-gray-900 items-center w-full mb-4">
                 <div className="w-full h-full bg-white rounded-lg shadow-md p-4">
