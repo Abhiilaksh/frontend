@@ -19,35 +19,36 @@ export default function Navbar() {
       <div className="flex items-center gap-4">
         {user && (
           <div className="flex items-center gap-4">
-            <CgProfile className="w-8 h-8 text-[#d9d9d9]" />
-            <button className="px-4 py-2 text-[#d9d9d9] bg-[rgba(26,26,26,0.5)] hover:text-[#d9d9d9] hover:bg-[#6953d6c4] rounded-md font-medium flex items-center gap-2 border border-[#d9d9d9a6]">
-              <FiLogIn />
+            <GradientText
+              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+              animationSpeed={3}
+              showBorder={true}
+              className="px-4 py-2 border border-[#d9d9d9a6] rounded-md font-medium flex items-center gap-2"
+            >
               Log out
-            </button>
+            </GradientText>
           </div>
         )}
         {token == null && (
           <div className="flex items-center gap-4">
-            <button>
-              <GradientText
-                colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
-                animationSpeed={3}
-                showBorder={false}
-                className="px-4 py-2 font-medium flex items-center gap-2"
-              >
-                Log in
-              </GradientText>
-            </button>
-            <button>
-              <GradientText
-                colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
-                animationSpeed={3}
-                showBorder={true}
-                className="px-4 py-2 border border-[#d9d9d9a6] rounded-md font-medium flex items-center gap-2"
-              >
-                Sign up
-              </GradientText>
-            </button>
+            <GradientText
+              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+              animationSpeed={3}
+              showBorder={false}
+              className="px-4 py-2 font-medium flex items-center gap-2"
+              onclick={() => navigate("/login")}
+            >
+              Log in
+            </GradientText>
+            <GradientText
+              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+              animationSpeed={3}
+              showBorder={true}
+              className="px-4 py-2 border border-[#d9d9d9a6] rounded-md font-medium flex items-center gap-2"
+              onclick={() => navigate("/signup")}
+            >
+              Sign up
+            </GradientText>
           </div>
         )}
       </div>
