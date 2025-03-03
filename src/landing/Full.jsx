@@ -4,7 +4,6 @@ import LandingHome from "./LandingHome";
 import Particles from "./Particles"
 
 export default function Full() {
-  const [logged, setLogged] = useState(false);
   return (
     <div className="relative h-screen w-full overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -20,10 +19,10 @@ export default function Full() {
         />
       </div>
       <div className="relative z-10">
-        <Navbar logged={logged} setLogged={setLogged} />
+        <Navbar/>
       </div>
       <div className="relative z-10">
-        <LandingHome logged={logged} setLogged={setLogged} />
+        <LandingHome/>
       </div>
     </div>
   );
