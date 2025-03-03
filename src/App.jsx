@@ -16,18 +16,41 @@ function App() {
         <Routes>
           <Route path="/" element={<Full />} />
           <Route path="/chess" element={<PlayWithEngine />} />
-          <Route path="/login" element={<OpenRouter><Login /></OpenRouter>} />
-          <Route path="/signup" element={<OpenRouter><Signup /></OpenRouter>} />
+          <Route
+            path="/login"
+            element={
+              <OpenRouter>
+                <Login />
+              </OpenRouter>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <OpenRouter>
+                <Signup />
+              </OpenRouter>
+            }
+          />
           <Route
             path="*"
             element={
-              <div className="flex items-center justify-center h-full w-full">
+              <div className="flex flex-col gap-10 items-center justify-center h-full w-full">
                 <FuzzyText
                   baseIntensity={0.2}
                   hoverIntensity={hoverIntensity}
                   enableHover={enableHover}
                 >
-                  404 Not Found
+                  404
+                </FuzzyText>
+                <FuzzyText
+                  baseIntensity={0.2}
+                  hoverIntensity={hoverIntensity}
+                  enableHover={enableHover}
+                  fontSize="70px"
+                  fontWeight={700}
+                >
+                  not found
                 </FuzzyText>
               </div>
             }

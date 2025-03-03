@@ -6,6 +6,7 @@ export default function GradientText({
   colors = ["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"], // Default colors
   animationSpeed = 8, // Default animation speed in seconds
   showBorder = false, // Default overlay visibility
+  onclick,
 }) {
   const gradientStyle = {
     backgroundImage: `linear-gradient(to right, ${colors.join(", ")})`,
@@ -13,7 +14,7 @@ export default function GradientText({
   };
 
   return (
-    <div className={`animated-gradient-text ${className}`}>
+    <div className={`animated-gradient-text ${className}`} onClick={onclick}>
       {showBorder && (
         <div className="gradient-overlay" style={gradientStyle}></div>
       )}
