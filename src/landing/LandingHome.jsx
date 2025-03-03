@@ -2,20 +2,22 @@ import React, { useState } from "react";
 import { FaRobot, FaUsers, FaGlobe } from "react-icons/fa";
 import { FiLogIn, FiUserPlus } from "react-icons/fi";
 import ChessBoard from "./ChessBoard";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-export default function LandingHome(props) {
-  const logged = props.logged;
-  const setLogged = props.setLogged;
+export default function LandingHome() {
   const [showModal, setShowModal] = useState(false);
+  const {token} = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   const playbutton = [
     { id: 1, text: "play with bot", icon: <FaRobot className="text-4xl" /> },
-    { id: 2, text: "play with friend", icon: <FaUsers className="text-4xl" /> },
+    { id: 2, text: "play Local", icon: <FaUsers className="text-4xl" /> },
     { id: 3, text: "play online", icon: <FaGlobe className="text-4xl" /> },
   ];
 
   const handleButtonClick = () => {
-    if (!logged) {
+    if (token==null) {
       setShowModal(true);
     }
   };
@@ -61,14 +63,14 @@ export default function LandingHome(props) {
             </p>
             <div className="flex gap-4">
               <button
-                onClick={closeModal}
+                onClick={() => navigate("/login")}
                 className="px-6 py-3 text-[#d9d9d9] bg-[#6953d6] hover:bg-[#5a45c1] rounded-lg font-medium flex items-center gap-2 transition duration-300 ease-in-out"
               >
                 <FiLogIn className="text-xl" />
                 Log in
               </button>
               <button
-                onClick={closeModal}
+                onClick={() => navigate("/signup")}
                 className="px-6 py-3 text-[#d9d9d9] bg-[#2b2b2b] hover:bg-[#3d3d3d] border border-[#d9d9d9a6] rounded-lg font-medium flex items-center gap-2 transition duration-300 ease-in-out"
               >
                 <FiUserPlus className="text-xl" />
