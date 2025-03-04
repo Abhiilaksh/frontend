@@ -40,6 +40,20 @@ const ChessGame = () => {
 
   const hintPanelRef = useRef(null);
 
+  // Add event listener for beforeunload to warn the user
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = 'Are you sure you want to leave? Your changes will not be saved.';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   // Helper function to handle custom difficulty changes
   const handleCustomDifficultyChange = (event) => {
     setCustomDifficulty(Number(event.target.value));
