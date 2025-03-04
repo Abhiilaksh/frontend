@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
+import { FaEnvelope, FaUser, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
@@ -31,7 +31,7 @@ export default function SignupForm() {
       console.log(token);
       localStorage.setItem("token", token);
       setUser(username);
-      navigate("/full");
+      navigate("/home");
     } catch (error) {
       toast.error(error?.response?.data?.error || "Some error occurred");
     }
@@ -41,7 +41,7 @@ export default function SignupForm() {
     <>
       <form className="space-y-4">
         <div className="relative">
-          <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+          <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
           <input
             placeholder="aichess"
             className="input-style pl-10"

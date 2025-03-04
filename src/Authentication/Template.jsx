@@ -31,10 +31,10 @@ export default function Template({ type, text1, text2, heading }) {
         />
       </div>
       <div className="relative z-10 w-full max-w-md p-8 bg-[#fff] rounded-lg shadow-xl border border-gray-700/50">
-        <div className="flex items-center justify-center align-middle gap-2 w-full px-4 mb-6">
-          <div className="text-2xl font-semibold text-[#000814]">{heading}</div>
+        <div className="flex items-center justify-center gap-2 w-full px-4">
+          <div className="text-2xl mb-2 text-[#000814]">{heading}</div>
           <div className="w-32">
-            <img src="LOGO_BLACK.png" className="" alt="" />
+            <img src="LOGO_BLACK.png" className="mb-3" alt="logo" />
           </div>
         </div>
         <div>
@@ -69,7 +69,7 @@ export default function Template({ type, text1, text2, heading }) {
             <div>
               <p className="mt-4 text-[#424854] text-sm">
                 {text1 + " "}
-                <a href="/login" className="text-[#000814] font-semibold">
+                <a href="/" className="text-[#000814] font-semibold">
                   {text2}
                 </a>
               </p>

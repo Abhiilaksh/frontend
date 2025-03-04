@@ -27,7 +27,7 @@ export default function LoginForm() {
       setUser(data.username);
       const token = data.token;
       localStorage.setItem("token", token);
-      navigate("/full");
+      navigate("/home");
     } catch (error) {
       toast.error(error?.response?.data?.error || "Some error Occurred");
       console.log(error?.response?.data?.error);

@@ -151,7 +151,7 @@ function OnlineGame() {
 
     function stopSearchingBtnClicked() {
         stopSearchingForThisUser();
-        navigate("/full");
+        navigate("/home");
     }
 
 
