@@ -1,9 +1,38 @@
 import React, { useState } from "react";
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import UserContext from "../Context/UserContext";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { user, setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+
+
+  async function login(e) {
+    try {
+      e.preventDefault();
+      const response = await axios.post(`http://localhost:8080/api/login`, {
+        email: email,
+        password: password
+      });
+      const data = response.data;
+      console.log(data);
+      setUser(data.username);
+      const token = data.token;
+      localStorage.setItem("token", token);
+      navigate("/full");
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Some error Occurred");
+      console.log(error?.response?.data?.error);
+    }
+  }
   return (
     <>
       <form className="space-y-4">
@@ -13,6 +42,8 @@ export default function LoginForm() {
             type="email"
             placeholder="aichess@example.com"
             className="input-style pl-10"
+            onInput={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <div className="relative">
@@ -21,6 +52,8 @@ export default function LoginForm() {
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             className="input-style pl-10"
+            onInput={(e) => setPassword(e.target.value)}
+            required
           />
           <button
             type="button"
@@ -36,7 +69,8 @@ export default function LoginForm() {
         </div>
         <button
           type="submit"
-          className="bg-[#000814] text-[#f5f3f3] w-full rounded-lg text-sm font-semibold px-6 py-3 mt-3"
+          className="bg-[#000814] hover:bg-[#f5f3f3] hover:text-[#000814] text-[#f5f3f3] w-full rounded-lg text-sm font-semibold px-6 py-3 mt-3"
+          onClick={(e) => login(e)}
         >
           Log in
         </button>
