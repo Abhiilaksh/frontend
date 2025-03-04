@@ -13,7 +13,7 @@ export default function Navbar() {
   const user = null;
 
   return (
-    <nav className="bg-transparent bg-opacity-50 backdrop-blur-md fixed top-0 left-0 w-full px-6 py-4 flex items-center justify-between z-50">
+    <nav className="bg-transparent fixed top-0 left-0 w-full px-6 py-4 flex items-center justify-between z-50">
       <div className="flex items-center">
         <img src="/LOGO_White.png" alt="" className="h-12 ml-10 " />
       </div>
