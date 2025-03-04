@@ -152,10 +152,10 @@ const getSquareCoordinates = (square, boardOrientation) => {
           boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
         }}
         customDarkSquareStyle={{
-          backgroundColor: "#888c94",
+          backgroundColor: "#888c95",
         }}
         customLightSquareStyle={{
-          backgroundColor: "#f0ecec",
+          backgroundColor: "#efeceb",
         }}
         customPieces={customPieces}
         boardOrientation={boardOrientation}
