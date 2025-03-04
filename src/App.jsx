@@ -2,10 +2,11 @@ import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Full from "./landing/Full";
 import PlayWithEngine from "./engine/PlayWithEngine";
-import FuzzyText from "./common/Error";
-import OpenRouter from "./Authentication/OpenRouter";
+import FuzzyText from "./utils/Error";
 import Signup from "./Authentication/Signup";
 import Login from "./Authentication/Login";
+import ForgotPassword from "./Authentication/forgotPassword";
+import UpdatePassword from "./Authentication/UpdatePassword";
 
 function App() {
   const hoverIntensity = 0.5;
@@ -16,22 +17,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Full />} />
           <Route path="/chess" element={<PlayWithEngine />} />
-          <Route
-            path="/login"
-            element={
-              <OpenRouter>
-                <Login />
-              </OpenRouter>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <OpenRouter>
-                <Signup />
-              </OpenRouter>
-            }
-          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/update-password/:id" element={<UpdatePassword />} />
           <Route
             path="*"
             element={
