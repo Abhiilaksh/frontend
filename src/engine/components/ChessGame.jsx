@@ -772,7 +772,7 @@ const ChessGame = () => {
         <div className="flex flex-col items-center gap-4">
           <div className='flex w-full px-2 items-center justify-evenly gap-8'>
             <div className='flex gap-4'>
-              <div className='flex flex-col flex-1'>
+              <div className='flex flex-col flex-1 text-white'>
                 <h2 className="text-2xl font-bold">{gameState.status}</h2>
                 <div className="text-lg">
                   Playing as: {playerColor === 'w' ? 'White' : 'Black'}
