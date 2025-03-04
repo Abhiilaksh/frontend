@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function LandingHome() {
   const [showModal, setShowModal] = useState(false);
-  const token = null;
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   const playbutton = [
@@ -15,9 +15,13 @@ export default function LandingHome() {
     { id: 3, text: "play online", icon: <FaGlobe className="text-4xl" /> },
   ];
 
-  const handleButtonClick = () => {
-    if (token==null) {
+  const handleButtonClick = (id) => {
+    if (!token) {
       setShowModal(true);
+    } else {
+      if (id == 1) navigate("/chess");
+      else if (id == 2) navigate("/localgamePage")
+      else navigate("/game");
     }
   };
 
@@ -36,7 +40,7 @@ export default function LandingHome() {
         {playbutton.map((button) => {
           return (
             <button
-              onClick={handleButtonClick}
+              onClick={() => handleButtonClick(button.id)}
               key={button.id}
               className="capitalize text-3xl text-[#d9d9d9] bg-[rgba(26,26,26,0.5)] rounded-md text-center m-4 p-7 w-[330px] flex items-center gap-4 shadow-md hover:text-[#d9d9d9] hover:bg-[#6953d6c4]"
             >
@@ -57,7 +61,7 @@ export default function LandingHome() {
             </p>
             <div className="flex gap-4">
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/")}
                 className="px-6 py-3 text-[#d9d9d9] bg-[#6953d6] hover:bg-[#5a45c1] rounded-lg font-medium flex items-center gap-2 transition duration-300 ease-in-out"
               >
                 <FiLogIn className="text-xl" />
