@@ -7,7 +7,7 @@ import ProtectedRoute from './Components/ProtectedRoutes';
 import Home from "./landing/Home";
 import Signup from "./Authentication/Signup";
 import Login from "./Authentication/Login";
-import ForgotPassword from "./Authentication/forgotPassword";
+import ForgotPassword from "./Authentication/ForgotPassword";
 import UpdatePassword from "./Authentication/UpdatePassword";
 import PlayWithEngine from "./engine/PlayWithEngine";
 import FuzzyText from "./utils/Error";
