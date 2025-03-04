@@ -144,6 +144,9 @@ export default function ChessBoard() {
         customLightSquareStyle={{
           backgroundColor: "#f0ecec",
         }}
+        customBoardStyle={{
+          borderRadius: "0.25rem",
+        }}
         customPieces={customPieces}
       />
     </div>

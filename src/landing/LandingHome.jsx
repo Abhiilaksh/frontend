@@ -28,12 +28,7 @@ export default function LandingHome() {
   return (
     <div className="flex flex-row items-center justify-center h-screen w-full text-white relative">
       <div className="relative w-1/2 flex items-center justify-center">
-        {/* <img
-          src="https://images.chesscomfiles.com/uploads/v1/images_users/tiny_mce/CHESScom/phphK5JVu.png"
-          alt="Chess board"
-          className="w-[90%] pt-[13%] p-[8%]"
-        /> */}
-        <div className="w-[90%] pt-[15%] p-[8%]">
+        <div className="w-[90%] pt-[15%] p-[8%] rounded-sm">
           <ChessBoard />
         </div>
       </div>
