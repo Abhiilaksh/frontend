@@ -3,7 +3,7 @@ import Navbar from "./Navbar";
 import LandingHome from "./LandingHome";
 import Particles from "./Particles"
 
-export default function Full() {
+export default function Home() {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       <div className="absolute inset-0 z-0">

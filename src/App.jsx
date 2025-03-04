@@ -1,7 +1,7 @@
 // src/App.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Full from "./landing/Full";
+import Home from "./landing/Home";
 import PlayWithEngine from "./engine/PlayWithEngine";
 import FuzzyText from "./utils/Error";
 import Signup from "./Authentication/Signup";
@@ -15,7 +15,7 @@ function App() {
   return (
     <div className="bg-[#121212] h-[100vh] w-[100vw] text-white">
       <Routes>
-        <Route path="/" element={<Full />} />
+        <Route path="/" element={<Home />} />
         <Route path="/chess" element={<PlayWithEngine />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

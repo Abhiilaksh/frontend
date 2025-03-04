@@ -48,7 +48,7 @@ export default function ForgotPassword() {
           )}
           <button
             type="submit"
-            className="bg-[#000814] hover:bg-[#f5f3f3] hover:text-[#000814] text-[#f5f3f3] w-full rounded-lg text-sm font-semibold px-6 py-3 mt-3"
+            className="bg-[#000814] text-[#f5f3f3] w-full rounded-lg text-sm font-semibold px-6 py-3 mt-3"
           >
             {emailSent ? "Resend Email" : "Reset Password"}
           </button>

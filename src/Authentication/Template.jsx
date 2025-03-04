@@ -5,12 +5,20 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { useGoogleLogin } from "@react-oauth/google";
 import Squares from "./Background";
+import { useNavigate } from "react-router-dom";
 
 export default function Template({ type, text1, text2, heading }) {
+  const navigate = useNavigate();
+
   const login = useGoogleLogin({
-    onSuccess: (tokenResponse) => console.log(tokenResponse),
+    onSuccess: (tokenResponse) => {
+      console.log(tokenResponse);
+      navigate("/");
+    },
     onError: () => console.log("Google Sign-In Failed"),
   });
+
+
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden">
       <div className="absolute inset-0 w-full h-full">
@@ -46,21 +54,11 @@ export default function Template({ type, text1, text2, heading }) {
               <span>Login With Google</span>
             </button>
           </div>
-
-          <a
-            href="https://github.com/login/oauth/authorize?client_id=Ov23liPbOMSVCNExxy2L&scope=user"
-            className="w-full flex flex-col"
-          >
-            <button className="text-sm flex items-center justify-center gap-2 bg-[#f5f3f3] text-[#585D69] font-medium px-6 py-3 rounded-lg hover:text-[#f5f3f3] hover:bg-[#000814]">
-              <FaGithub fontSize={23} />
-              <span>Login With GitHub</span>
-            </button>
-          </a>
         </div>
         <div className="w-full items-center justify-center flex mt-6">
           {type === "login" ? (
             <div>
-              <p className="mt-4 text-[#424854] text-sm ">
+              <p className="mt-4 text-[#424854] text-sm">
                 {text1 + " "}
                 <a href="/signup" className="text-[#000814] font-semibold">
                   {text2}
