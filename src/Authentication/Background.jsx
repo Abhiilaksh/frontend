@@ -1,222 +1,156 @@
-import { useEffect, useRef } from "react";
-import { Renderer, Program, Mesh, Triangle, Color } from "ogl";
+import { useRef, useEffect } from "react";
 
-const vertexShader = `
-attribute vec2 position;
-attribute vec2 uv;
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position, 0.0, 1.0);
-}
-`;
-
-const fragmentShader = `
-precision highp float;
-uniform float iTime;
-uniform vec3 iResolution;
-uniform vec3 uColor;
-uniform float uAmplitude;
-uniform float uDistance;
-uniform vec2 uMouse;
-
-#define PI 3.1415926538
-
-const int u_line_count = 40;
-const float u_line_width = 7.0;
-const float u_line_blur = 10.0;
-
-float pixel(float count, vec2 resolution) {
-    return 1.0 / max(resolution.x, resolution.y) * count;
-}
-
-float Perlin2D(vec2 P)
-{
-    vec2 Pi = floor(P);
-    vec4 Pf_Pfmin1 = P.xyxy - vec4(Pi, Pi + 1.0);
-    vec4 Pt = vec4(Pi.xy, Pi.xy + 1.0);
-    Pt = Pt - floor(Pt * (1.0 / 71.0)) * 71.0;
-    Pt += vec2(26.0, 161.0).xyxy;
-    Pt *= Pt;
-    Pt = Pt.xzxz * Pt.yyww;
-    vec4 hash_x = fract(Pt * (1.0 / 951.135664));
-    vec4 hash_y = fract(Pt * (1.0 / 642.949883));
-    vec4 grad_x = hash_x - 0.49999;
-    vec4 grad_y = hash_y - 0.49999;
-    vec4 grad_results = inversesqrt(grad_x * grad_x + grad_y * grad_y) * (grad_x * Pf_Pfmin1.xzxz + grad_y * Pf_Pfmin1.yyww);
-    grad_results *= 1.4142135623730950488016887242097;
-    vec2 blend = Pf_Pfmin1.xy * Pf_Pfmin1.xy * Pf_Pfmin1.xy * (Pf_Pfmin1.xy * (Pf_Pfmin1.xy * 6.0 - 15.0) + 10.0);
-    vec4 blend2 = vec4(blend, vec2(1.0 - blend));
-    return dot(grad_results, blend2.zxzx * blend2.wwyy);
-}
-
-float line(vec2 st, float width, float perc, float offset) {
-    float split_offset = (perc * 0.4);
-    float split_point = 0.1 + split_offset;
-    
-    float amplitude_normal = smoothstep(split_point, 0.7, st.x);
-    float amplitude_strength = 0.5;
-    // Reduced modulation intensity (20% influence from mouse Y)
-    float amplitude = amplitude_normal * amplitude_strength * uAmplitude * (1.0 + (uMouse.y - 0.5) * 0.2);
-
-    // Reduced time modulation (only 1.0 factor)
-    float time_scaled = iTime / 10.0 + (uMouse.x - 0.5) * 1.0;
-    
-    float blur = smoothstep(split_point, split_point + 0.05, st.x) * perc;
-
-    float xnoise = mix(
-        Perlin2D(vec2(time_scaled, st.x + perc) * 2.5),
-        Perlin2D(vec2(time_scaled, st.x + time_scaled) * 3.5) / 1.5,
-        st.x * 0.3
-    );
-
-    float y = 0.5 + (perc - 0.5) * uDistance + xnoise / 2.0 * amplitude;
-
-    float line_start = smoothstep(
-        y + (width / 2.0) + (u_line_blur * pixel(1.0, iResolution.xy) * blur),
-        y,
-        st.y
-    );
-        
-    float line_end = smoothstep(
-        y,
-        y - (width / 2.0) - (u_line_blur * pixel(1.0, iResolution.xy) * blur),
-        st.y
-    );
-    
-    return clamp(
-        (line_start - line_end) * (1.0 - smoothstep(0.0, 1.0, pow(perc, 0.3))),
-        0.0,
-        1.0
-    );
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    vec2 uv = fragCoord / iResolution.xy;
-    
-    float line_strength = 1.0;
-
-    for (int i = 0; i < u_line_count; i++) {
-        line_strength *= (1.0 - line(
-            uv,
-            u_line_width * pixel(1.0, iResolution.xy) * (1.0 - float(i) / float(u_line_count)),
-            float(i) / float(u_line_count),
-            (PI * 1.0) * float(i) / float(u_line_count)
-        ));
-    }
-    
-    float color = 1.0 - line_strength;
-    fragColor = vec4(uColor * color, color);
-}
-
-void main() {
-    mainImage(gl_FragColor, gl_FragCoord.xy);
-}
-`;
-
-const Threads = ({
-  color = [1, 1, 1],
-  amplitude = 1,
-  distance = 0,
-  enableMouseInteraction = false,
-  ...rest
+const Squares = ({
+  direction = "right",
+  speed = 1,
+  borderColor = "#999",
+  squareSize = 40,
+  hoverFillColor = "#222",
 }) => {
-  const containerRef = useRef(null);
-  const animationFrameId = useRef();
+  const canvasRef = useRef(null);
+  const requestRef = useRef(null);
+  const numSquaresX = useRef(0);
+  const numSquaresY = useRef(0);
+  const gridOffset = useRef({ x: 0, y: 0 });
+  const hoveredSquareRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
-    const renderer = new Renderer({ dpr: devicePixelRatio, alpha: true });
-    const gl = renderer.gl;
-    gl.clearColor(0, 0, 0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    container.appendChild(gl.canvas);
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      numSquaresX.current = Math.ceil(canvas.width / squareSize) + 1;
+      numSquaresY.current = Math.ceil(canvas.height / squareSize) + 1;
+    };
 
-    const geometry = new Triangle(gl);
-    const program = new Program(gl, {
-      vertex: vertexShader,
-      fragment: fragmentShader,
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: {
-          value: new Color(
-            gl.canvas.width,
-            gl.canvas.height,
-            gl.canvas.width / gl.canvas.height
-          ),
-        },
-        uColor: { value: new Color(...color) },
-        uAmplitude: { value: amplitude },
-        uDistance: { value: distance },
-        uMouse: { value: new Float32Array([0.5, 0.5]) },
-      },
-    });
-    const mesh = new Mesh(gl, { geometry, program });
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
-    function resize() {
-      const { clientWidth, clientHeight } = container;
-      renderer.setSize(clientWidth, clientHeight);
-      program.uniforms.iResolution.value = new Color(
-        clientWidth,
-        clientHeight,
-        clientWidth / clientHeight
-      );
-    }
-    window.addEventListener("resize", resize);
-    resize();
+    const drawGrid = () => {
+      if (!ctx) return;
 
-    let currentMouse = [0.5, 0.5];
-    let targetMouse = [0.5, 0.5];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    function handleMouseMove(e) {
-      const rect = container.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1.0 - (e.clientY - rect.top) / rect.height;
-      targetMouse = [x, y];
-    }
-    function handleMouseLeave() {
-      targetMouse = [0.5, 0.5];
-    }
-    if (enableMouseInteraction) {
-      container.addEventListener("mousemove", handleMouseMove);
-      container.addEventListener("mouseleave", handleMouseLeave);
-    }
+      const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
+      const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
 
-    function update(t) {
-      if (enableMouseInteraction) {
-        const smoothing = 0.05;
-        currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
-        currentMouse[1] += smoothing * (targetMouse[1] - currentMouse[1]);
-        program.uniforms.uMouse.value[0] = currentMouse[0];
-        program.uniforms.uMouse.value[1] = currentMouse[1];
-      } else {
-        program.uniforms.uMouse.value[0] = 0.5;
-        program.uniforms.uMouse.value[1] = 0.5;
+      for (let x = startX; x < canvas.width + squareSize; x += squareSize) {
+        for (let y = startY; y < canvas.height + squareSize; y += squareSize) {
+          const squareX = x - (gridOffset.current.x % squareSize);
+          const squareY = y - (gridOffset.current.y % squareSize);
+
+          if (
+            hoveredSquareRef.current &&
+            Math.floor((x - startX) / squareSize) ===
+            hoveredSquareRef.current.x &&
+            Math.floor((y - startY) / squareSize) === hoveredSquareRef.current.y
+          ) {
+            ctx.fillStyle = hoverFillColor;
+            ctx.fillRect(squareX, squareY, squareSize, squareSize);
+          }
+
+          ctx.strokeStyle = borderColor;
+          ctx.strokeRect(squareX, squareY, squareSize, squareSize);
+        }
       }
-      program.uniforms.iTime.value = t * 0.001;
-      renderer.render({ scene: mesh });
-      animationFrameId.current = requestAnimationFrame(update);
-    }
-    animationFrameId.current = requestAnimationFrame(update);
+
+      const gradient = ctx.createRadialGradient(
+        canvas.width / 2,
+        canvas.height / 2,
+        0,
+        canvas.width / 2,
+        canvas.height / 2,
+        Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 2
+      );
+      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+      gradient.addColorStop(1, "#060606");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    const updateAnimation = () => {
+      const effectiveSpeed = Math.max(speed, 0.1);
+      switch (direction) {
+        case "right":
+          gridOffset.current.x =
+            (gridOffset.current.x - effectiveSpeed + squareSize) % squareSize;
+          break;
+        case "left":
+          gridOffset.current.x =
+            (gridOffset.current.x + effectiveSpeed + squareSize) % squareSize;
+          break;
+        case "up":
+          gridOffset.current.y =
+            (gridOffset.current.y + effectiveSpeed + squareSize) % squareSize;
+          break;
+        case "down":
+          gridOffset.current.y =
+            (gridOffset.current.y - effectiveSpeed + squareSize) % squareSize;
+          break;
+        case "diagonal":
+          gridOffset.current.x =
+            (gridOffset.current.x - effectiveSpeed + squareSize) % squareSize;
+          gridOffset.current.y =
+            (gridOffset.current.y - effectiveSpeed + squareSize) % squareSize;
+          break;
+        default:
+          break;
+      }
+
+      drawGrid();
+      requestRef.current = requestAnimationFrame(updateAnimation);
+    };
+
+    const handleMouseMove = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
+      const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
+
+      const hoveredSquareX = Math.floor(
+        (mouseX + gridOffset.current.x - startX) / squareSize
+      );
+      const hoveredSquareY = Math.floor(
+        (mouseY + gridOffset.current.y - startY) / squareSize
+      );
+
+      if (
+        !hoveredSquareRef.current ||
+        hoveredSquareRef.current.x !== hoveredSquareX ||
+        hoveredSquareRef.current.y !== hoveredSquareY
+      ) {
+        hoveredSquareRef.current = { x: hoveredSquareX, y: hoveredSquareY };
+      }
+    };
+
+    const handleMouseLeave = () => {
+      hoveredSquareRef.current = null;
+    };
+
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+    requestRef.current = requestAnimationFrame(updateAnimation);
 
     return () => {
-      if (animationFrameId.current)
-        cancelAnimationFrame(animationFrameId.current);
-      window.removeEventListener("resize", resize);
-      if (enableMouseInteraction) {
-        container.removeEventListener("mousemove", handleMouseMove);
-        container.removeEventListener("mouseleave", handleMouseLeave);
-      }
-      if (container.contains(gl.canvas)) container.removeChild(gl.canvas);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      window.removeEventListener("resize", resizeCanvas);
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [color, amplitude, distance, enableMouseInteraction]);
+  }, [direction, speed, borderColor, hoverFillColor, squareSize]);
 
-  return <div ref={containerRef} className="w-full h-full relative" {...rest} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="w-full h-full border-none block"
+    ></canvas>
+  );
 };
 
-export default Threads;
+export default Squares;

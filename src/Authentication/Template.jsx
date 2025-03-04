@@ -1,12 +1,12 @@
 import React from "react";
-import Threads from "./Background";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { useGoogleLogin } from "@react-oauth/google";
+import Squares from "./Background";
 
-export default function Template({ type, title }) {
+export default function Template({ type, text1, text2, heading }) {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => console.log(tokenResponse),
     onError: () => console.log("Google Sign-In Failed"),
@@ -14,44 +14,70 @@ export default function Template({ type, title }) {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden">
       <div className="absolute inset-0 w-full h-full">
-        <Threads
-          amplitude={0.6}
-          distance={0.4}
-          enableMouseInteraction={false}
+        <Squares
+          speed={0.5}
+          squareSize={40}
+          direction="diagonal"
+          borderColor="#fff"
+          hoverFillColor="#222"
         />
       </div>
-      <div className="relative z-10 w-full max-w-md p-8 bg-[#181818] rounded-2xl shadow-xl border border-gray-700/50 backdrop-blur-lg">
-        <div className="text-3xl font-semibold text-[#f1f2ff] text-center mb-8">
-          {title}
+      <div className="relative z-10 w-full max-w-md p-8 bg-[#fff] rounded-lg shadow-xl border border-gray-700/50">
+        <div className="flex items-center justify-center align-middle gap-2 w-full px-4 mb-6">
+          <div className="text-2xl font-semibold text-[#000814]">{heading}</div>
+          <div className="w-32">
+            <img src="LOGO_BLACK.png" className="" alt="" />
+          </div>
         </div>
-        <div className="flex flex-row justify-evenly w-full">
-          <div className="w-[40%] flex flex-col">
+        <div>
+          {type === "login" && <LoginForm />}
+          {type === "signup" && <SignupForm />}
+        </div>
+        <div className="mt-6 text-[#424854] text-xl items-center justify-center w-full text-center">
+          or
+        </div>
+        <div className="mt-6 space-y-4">
+          <div className="w-full flex flex-col">
             <button
               onClick={() => login()}
-              className="flex items-center gap-2 bg-[rgba(26,26,26,0.5)] text-white font-medium px-6 py-3 rounded-lg shadow-md hover:text-[#d9d9d9] hover:bg-[#6953d6c4]"
+              className="text-sm flex items-center gap-2 justify-center bg-[#f5f3f3] text-[#585D69] font-medium px-6 py-3 rounded-lg hover:text-[#f5f3f3] hover:bg-[#000814]"
             >
-              <FcGoogle fontSize={25} />
-              <span>Google</span>
+              <FcGoogle fontSize={23} />
+              <span>Login With Google</span>
             </button>
           </div>
 
           <a
             href="https://github.com/login/oauth/authorize?client_id=Ov23liPbOMSVCNExxy2L&scope=user"
-            className="w-[40%] flex flex-col"
+            className="w-full flex flex-col"
           >
-            <button className="flex items-center gap-2 bg-[rgba(26,26,26,0.5)] text-white font-medium px-6 py-3 rounded-lg shadow-md hover:text-[#d9d9d9] hover:bg-[#6953d6c4]">
-              <FaGithub fontSize={25} />
-              <span>GitHub</span>
+            <button className="text-sm flex items-center justify-center gap-2 bg-[#f5f3f3] text-[#585D69] font-medium px-6 py-3 rounded-lg hover:text-[#f5f3f3] hover:bg-[#000814]">
+              <FaGithub fontSize={23} />
+              <span>Login With GitHub</span>
             </button>
           </a>
         </div>
-        <div className="items-center justify-center flex flex-row w-full mb-4 text-2xl text-gray-400">
-          or
+        <div className="w-full items-center justify-center flex mt-6">
+          {type === "login" ? (
+            <div>
+              <p className="mt-4 text-[#424854] text-sm ">
+                {text1 + " "}
+                <a href="/signup" className="text-[#000814] font-semibold">
+                  {text2}
+                </a>
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="mt-4 text-[#424854] text-sm">
+                {text1 + " "}
+                <a href="/login" className="text-[#000814] font-semibold">
+                  {text2}
+                </a>
+              </p>
+            </div>
+          )}
         </div>
-      </div>
-      <div>
-        {type === "login" && <LoginForm />}
-        {type === "signup" && <SignupForm />}
       </div>
     </div>
   );

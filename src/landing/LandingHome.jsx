@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { FaRobot, FaUsers, FaGlobe } from "react-icons/fa";
 import { FiLogIn, FiUserPlus } from "react-icons/fi";
 import ChessBoard from "./ChessBoard";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 export default function LandingHome() {
   const [showModal, setShowModal] = useState(false);
-  const {token} = useSelector((state) => state.auth);
+  const token = null;
   const navigate = useNavigate();
 
   const playbutton = [

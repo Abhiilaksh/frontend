@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { CgProfile } from "react-icons/cg";
 import { FiLogIn, FiUserPlus } from "react-icons/fi";
-import GradientText from "../common/GradientButton";
+import GradientText from "../utils/GradientButton";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+
 
 export default function Navbar() {
   const navigate = useNavigate();
 
-  const { user } = useSelector((state) => state.profile);
-  const { token } = useSelector((state) => state.auth);
+  
+  const token = null;
+  const user = null;
 
   return (
     <nav className="bg-transparent bg-opacity-50 backdrop-blur-md fixed top-0 left-0 w-full px-6 py-4 flex items-center justify-between z-50">
