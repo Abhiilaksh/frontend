@@ -55,7 +55,7 @@ export default function ForgotPassword() {
         </form>
 
         <div className="mt-6 flex items-center justify-between">
-          <Link to="/login">
+          <Link to="/">
             <p className="flex items-center gap-x-2 text-[#000814]">
               <BiArrowBack />
               Back to login
