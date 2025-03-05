@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -13,6 +13,11 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
+
+
+  useEffect(()=>{
+      if(user) navigate("/home");
+  },[user]);
 
 
   async function login(e) {

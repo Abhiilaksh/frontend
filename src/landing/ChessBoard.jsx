@@ -148,6 +148,7 @@ export default function ChessBoard() {
           borderRadius: "0.25rem",
         }}
         customPieces={customPieces}
+        arePiecesDraggable={false}
       />
     </div>
   );

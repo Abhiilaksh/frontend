@@ -121,12 +121,15 @@ function OnlineGame() {
                 if (game.isCheckmate()) {
                     const winner = move.color === "w" ? "White" : "Black";
                     socket.emit('game-over', { roomName: RoomName, result: `${winner} wins by checkmate` });
+                    clearSessionStorage();
                     navigate('/home');
                 } else if (game.isStalemate()) {
                     socket.emit('game-over', { roomName: RoomName, result: `stalemate` });
+                    clearSessionStorage();
                     navigate('/home');
                 } else if (game.isDraw()) {
                     socket.emit('game-over', { roomName: RoomName, result: `draw` });
+                    clearSessionStorage();
                     navigate('/home');
                 }
 
@@ -142,6 +145,7 @@ function OnlineGame() {
     function resign() {
         socket.emit('resign', { roomName: RoomName, user: user, color: color });
         toast.success(`${color} resigned`);
+        clearSessionStorage();
         navigate('/home');
     }
 
@@ -179,6 +183,10 @@ function OnlineGame() {
         }
     }
 
+    function clearSessionStorage() {
+        sessionStorage.removeItem('roomName');
+        sessionStorage.removeItem('online-game');
+    }
     useEffect(() => {
         getRoomFensAndPng();
         getRoomMessages();
