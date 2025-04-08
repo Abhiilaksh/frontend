@@ -1,9 +1,9 @@
 import OnlineGame from "./Components/OnlineGame";
 import LocalGame from "./Components/localGame";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from "react-hot-toast";
 import LocalGamePage from "./Components/localGamePage";
-import ProtectedRoute from './Components/ProtectedRoutes';
+import ProtectedRoute from "./Components/ProtectedRoutes";
 import Home from "./landing/Home";
 import Signup from "./Authentication/Signup";
 import Login from "./Authentication/Login";
@@ -11,9 +11,14 @@ import ForgotPassword from "./Authentication/ForgotPassword";
 import UpdatePassword from "./Authentication/UpdatePassword";
 import PlayWithEngine from "./engine/PlayWithEngine";
 import FuzzyText from "./utils/Error";
+import Dashboard from "./Admin/Dashboard";
+import Users from "./Admin/Users";
+import Banned from "./Admin/Banned";
+import Reports from "./Admin/Reports";
+import Adminhome from "./Admin/Adminhome";
+import AdminLogin from "./Admin/AdminLogin"; // Renamed this import
 
 function App() {
-
   const hoverIntensity = 0.5;
   const enableHover = true;
 
@@ -24,26 +29,42 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />}></Route>
           <Route path="/signup" element={<Signup />} />
-          <Route path="/home" element={
-            <Home />
-          }></Route>
+          <Route path="/home" element={<Home />}></Route>
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/update-password/:id" element={<UpdatePassword />} />
 
-          <Route path="/localgame/:gameId" element={
-            <ProtectedRoute><LocalGame /></ProtectedRoute>
-          } />
-          <Route path="/game" element={
-            <ProtectedRoute><OnlineGame /></ProtectedRoute>
-          }></Route>
-          <Route path="/localgamePage" element={
-            <ProtectedRoute><LocalGamePage /></ProtectedRoute>
-          }></Route>
-          <Route path="/chess" element={
-            <ProtectedRoute>
-              <PlayWithEngine />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/localgame/:gameId"
+            element={
+              <ProtectedRoute>
+                <LocalGame />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/game"
+            element={
+              <ProtectedRoute>
+                <OnlineGame />
+              </ProtectedRoute>
+            }
+          ></Route>
+          <Route
+            path="/localgamePage"
+            element={
+              <ProtectedRoute>
+                <LocalGamePage />
+              </ProtectedRoute>
+            }
+          ></Route>
+          <Route
+            path="/chess"
+            element={
+              <ProtectedRoute>
+                <PlayWithEngine />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="*"
             element={
@@ -67,10 +88,23 @@ function App() {
               </div>
             }
           />
+          <Route
+            element={
+              // <ProtectedRoute>
+                <Dashboard />
+              // </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard/admin" element={<Adminhome />} />
+            <Route path="dashboard/admin/users" element={<Users />} />
+            <Route path="dashboard/admin/banned" element={<Banned />} />
+            <Route path="dashboard/admin/reports" element={<Reports />} />
+          </Route>
+          <Route path="admin/login" element={<AdminLogin />} />
         </Routes>
       </BrowserRouter>
     </div>
-  )
+  );
 }
 
 export default App;
