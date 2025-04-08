@@ -16,7 +16,8 @@ import Users from "./Admin/Users";
 import Banned from "./Admin/Banned";
 import Reports from "./Admin/Reports";
 import Adminhome from "./Admin/Adminhome";
-import AdminLogin from "./Admin/AdminLogin"; // Renamed this import
+import AdminLogin from "./Admin/AdminLogin";
+import ProtectedAdmin from "./Admin/ProtectedAdmin";
 
 function App() {
   const hoverIntensity = 0.5;
@@ -90,9 +91,9 @@ function App() {
           />
           <Route
             element={
-              // <ProtectedRoute>
+              <ProtectedAdmin>
                 <Dashboard />
-              // </ProtectedRoute>
+              </ProtectedAdmin>
             }
           >
             <Route path="dashboard/admin" element={<Adminhome />} />
