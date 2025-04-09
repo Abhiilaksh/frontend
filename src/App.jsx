@@ -18,6 +18,8 @@ import Reports from "./Admin/Reports";
 import Adminhome from "./Admin/Adminhome";
 import AdminLogin from "./Admin/AdminLogin";
 import ProtectedAdmin from "./Admin/ProtectedAdmin";
+import Verify from "./Authentication/Veriify";
+import VerifyConfirmation from "./Authentication/VerifyConfirmation";
 
 function App() {
   const hoverIntensity = 0.5;
@@ -33,6 +35,8 @@ function App() {
           <Route path="/home" element={<Home />}></Route>
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/update-password/:id" element={<UpdatePassword />} />
+          <Route path="/verify" element={<Verify />} />
+          <Route path="/verify-email/:token" element={<VerifyConfirmation />} />
 
           <Route
             path="/localgame/:gameId"
