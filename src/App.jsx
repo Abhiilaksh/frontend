@@ -18,7 +18,7 @@ import Reports from "./Admin/Reports";
 import Adminhome from "./Admin/Adminhome";
 import AdminLogin from "./Admin/AdminLogin";
 import ProtectedAdmin from "./Admin/ProtectedAdmin";
-import Verify from "./Authentication/Veriify";
+import Verify from "./Authentication/Verify";
 import VerifyConfirmation from "./Authentication/VerifyConfirmation";
 
 function App() {
@@ -30,20 +30,21 @@ function App() {
       <Toaster />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Login />}></Route>
+          <Route path="/" element={<Home />}></Route>
+          <Route path="/login" element={<Login />}></Route>
+          <Route path="/verify" element={<Verify />}></Route>
           <Route path="/signup" element={<Signup />} />
           <Route path="/home" element={<Home />}></Route>
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/update-password/:id" element={<UpdatePassword />} />
-          <Route path="/verify" element={<Verify />} />
           <Route path="/verify-email/:token" element={<VerifyConfirmation />} />
 
           <Route
             path="/localgame/:gameId"
             element={
-              <ProtectedRoute>
+             
                 <LocalGame />
-              </ProtectedRoute>
+              
             }
           />
           <Route
@@ -57,9 +58,9 @@ function App() {
           <Route
             path="/localgamePage"
             element={
-              <ProtectedRoute>
+              
                 <LocalGamePage />
-              </ProtectedRoute>
+              
             }
           ></Route>
           <Route

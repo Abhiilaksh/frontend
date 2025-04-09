@@ -4,6 +4,7 @@ import Squares from './Background';
 import { FaEnvelope } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
+import axios from 'axios';
 
 export default function Verify() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,12 +12,37 @@ export default function Verify() {
   const navigate = useNavigate();
   
 //   local storage
-  const userEmail = localStorage.getItem('userEmail') || 'your email';
+  const token = localStorage.getItem('token');
 
 //   function for verify button click
-  const handleVerifyClick = async () => {
+const handleVerifyClick = async () => {
+  setIsLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    console.log(`token is this : ${token}`);
     
-  };
+    const response = await axios.post(
+      "http://localhost:8080/api/verifyToken",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log(response.data);
+    toast.success("Verification email sent. Please check your inbox.");
+    setEmailSent(true); // show the "Check your email" screen
+  } catch (err) {
+    console.error("Verification error:", err.response?.data || err.message);
+    toast.error("Failed to send verification email. Try again later.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden">
@@ -82,7 +108,7 @@ export default function Verify() {
               </h1>
             </div>
             <p className="my-4 text-sm leading-[1.625rem] text-[#838894] text-center">
-              We've sent a verification link to <span className="font-semibold">{userEmail}</span>. Please check your inbox and click the link to verify your account.
+              We've sent a verification link to <span className="font-semibold">your email</span>. Please check your inbox and click the link to verify your account.
             </p>
             <div className="flex flex-col space-y-3 mt-6">
               <button

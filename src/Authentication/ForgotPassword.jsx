@@ -8,10 +8,34 @@ export default function ForgotPassword() {
   const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState("");
 
-  const handleonSubmit = (e) => {
+  const handleonSubmit = async (e) => {
     e.preventDefault();
-    setEmailSent(true);
-  };  
+  
+    try {
+      const response = await fetch('http://localhost:8080/api/resetPasswordToken', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+  
+      const data = await response.json();
+      console.log(response);
+  
+      if (response.ok) {
+        setEmailSent(true);
+        console.log('Token sent to email:', data);
+      } else {
+        console.error('Error:', data.error);
+        
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+    
+    }
+  };
+   
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden">
