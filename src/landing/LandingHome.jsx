@@ -16,12 +16,15 @@ export default function LandingHome() {
   ];
 
   const handleButtonClick = (id) => {
-    if (!token) {
-      setShowModal(true);
+    if (id === 2) {
+      navigate("/localgamePage");
     } else {
-      if (id == 1) navigate("/chess");
-      else if (id == 2) navigate("/localgamePage")
-      else navigate("/game");
+      if (!token) {
+        setShowModal(true);
+      } else {
+        if (id === 1) navigate("/chess");
+        else navigate("/game");
+      }
     }
   };
 
@@ -61,7 +64,7 @@ export default function LandingHome() {
             </p>
             <div className="flex gap-4">
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/login")}
                 className="px-6 py-3 text-[#d9d9d9] bg-[#6953d6] hover:bg-[#5a45c1] rounded-lg font-medium flex items-center gap-2 transition duration-300 ease-in-out"
               >
                 <FiLogIn className="text-xl" />

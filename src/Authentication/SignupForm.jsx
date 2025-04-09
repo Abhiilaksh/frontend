@@ -31,7 +31,7 @@ export default function SignupForm() {
       console.log(token);
       localStorage.setItem("token", token);
       setUser(username);
-      navigate("/home");
+      navigate("/verify");
     } catch (error) {
       toast.error(error?.response?.data?.error || "Some error occurred");
     }

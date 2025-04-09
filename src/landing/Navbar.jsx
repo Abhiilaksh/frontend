@@ -47,7 +47,7 @@ export default function Navbar() {
               animationSpeed={3}
               showBorder={false}
               className="px-4 py-2 font-medium flex items-center gap-2"
-              onclick={() => navigate("/")}
+              onclick={() => navigate("/login")}
             >
               Log in
             </GradientText>
