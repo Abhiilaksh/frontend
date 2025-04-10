@@ -20,6 +20,7 @@ import AdminLogin from "./Admin/AdminLogin";
 import ProtectedAdmin from "./Admin/ProtectedAdmin";
 import Verify from "./Authentication/Verify";
 import VerifyConfirmation from "./Authentication/VerifyConfirmation";
+import Userdashboard from "./Users/Userdashboard";
 
 function App() {
   const hoverIntensity = 0.5;
@@ -39,14 +40,7 @@ function App() {
           <Route path="/update-password/:id" element={<UpdatePassword />} />
           <Route path="/verify-email/:token" element={<VerifyConfirmation />} />
 
-          <Route
-            path="/localgame/:gameId"
-            element={
-             
-                <LocalGame />
-              
-            }
-          />
+          <Route path="/localgame/:gameId" element={<LocalGame />} />
           <Route
             path="/game"
             element={
@@ -55,14 +49,7 @@ function App() {
               </ProtectedRoute>
             }
           ></Route>
-          <Route
-            path="/localgamePage"
-            element={
-              
-                <LocalGamePage />
-              
-            }
-          ></Route>
+          <Route path="/localgamePage" element={<LocalGamePage />}></Route>
           <Route
             path="/chess"
             element={
@@ -107,6 +94,14 @@ function App() {
             <Route path="dashboard/admin/reports" element={<Reports />} />
           </Route>
           <Route path="admin/login" element={<AdminLogin />} />
+          <Route
+            path="/dashboard-pannel"
+            element={
+              <ProtectedRoute>
+                <Userdashboard />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

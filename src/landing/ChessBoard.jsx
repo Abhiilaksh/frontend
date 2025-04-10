@@ -96,7 +96,7 @@ export default function ChessBoard() {
     const getGame = async () => {
       try {
         const response = await axios.get("/data.json");
-        console.log("Game Data:", response.data);
+        // console.log("Game Data:", response.data);
 
         if (response.data.data && response.data.data.length > 0) {
           setGames(response.data.data);
