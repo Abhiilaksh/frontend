@@ -30,7 +30,7 @@ export default function SignupForm() {
       const token = data.token;
       console.log(token);
       localStorage.setItem("token", token);
-      setUser(username);
+      //setUser(username);
       navigate("/verify");
     } catch (error) {
       toast.error(error?.response?.data?.error || "Some error occurred");
